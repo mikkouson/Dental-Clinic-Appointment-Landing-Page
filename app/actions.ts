@@ -1,130 +1,95 @@
 "use server";
 
-import { encodedRedirect } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
-import { headers } from "next/headers";
+import moment from "moment";
 import { redirect } from "next/navigation";
+import { z } from "zod";
+import { PatientFormValues, PatientSchema } from "@/app/types";
 
-export const signUpAction = async (formData: FormData) => {
-  const email = formData.get("email")?.toString();
-  const password = formData.get("password")?.toString();
-  const supabase = createClient();
-  const origin = headers().get("origin");
+interface AppointmentActionProps {
+  aptId: number;
+}
 
-  if (!email || !password) {
-    return { error: "Email and password are required" };
+export async function newAppointment(data: PatientFormValues) {
+  // Validate the incoming data
+  const result = PatientSchema.safeParse(data);
+
+  if (!result.success) {
+    console.log("Validation errors:", result.error.format());
+    // You might want to throw an error or handle it accordingly
+    return;
   }
 
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback`,
-    },
-  });
-
-  if (error) {
-    console.error(error.code + " " + error.message);
-    return encodedRedirect("error", "/sign-up", error.message);
-  } else {
-    return encodedRedirect(
-      "success",
-      "/sign-up",
-      "Thanks for signing up! Please check your email for a verification link.",
-    );
-  }
-};
-
-export const signInAction = async (formData: FormData) => {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
   const supabase = createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  // Step 1: Insert address and get the ID
+  const { data: addressData, error: addressError } = await supabase
+    .from("addresses")
+    .insert([
+      {
+        address: data.address.address,
+        latitude: data.address.latitude,
+        longitude: data.address.longitude,
+      },
+    ])
+    .select("id")
+    .single();
 
-  if (error) {
-    return encodedRedirect("error", "/sign-in", error.message);
+  if (addressError || !addressData) {
+    console.error("Error inserting address:", addressError?.message);
+    // Handle the error appropriately, maybe throw or return
+    return;
   }
 
-  return redirect("/protected");
-};
+  const addressId = addressData.id;
 
-export const forgotPasswordAction = async (formData: FormData) => {
-  const email = formData.get("email")?.toString();
-  const supabase = createClient();
-  const origin = headers().get("origin");
-  const callbackUrl = formData.get("callbackUrl")?.toString();
+  // Step 2: Insert patient with the address ID and get the patient ID
+  const { data: patientData, error: patientError } = await supabase
+    .from("patients")
+    .insert([
+      {
+        name: data.name,
+        email: data.email,
+        sex: data.sex,
+        address: addressId,
+        phone_number: data.phoneNumber,
+        dob: data.dob,
+        status: data.status,
+      },
+    ])
+    .select("id")
+    .single();
 
-  if (!email) {
-    return encodedRedirect("error", "/forgot-password", "Email is required");
+  if (patientError || !patientData) {
+    console.error("Error inserting patient:", patientError?.message);
+    // Handle the error appropriately
+    return;
   }
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?redirect_to=/protected/reset-password`,
-  });
+  const patientId = patientData.id;
 
-  if (error) {
-    console.error(error.message);
-    return encodedRedirect(
-      "error",
-      "/forgot-password",
-      "Could not reset password",
-    );
+  // Step 3: Insert appointment with the patient ID
+  const { data: appointment, error: appointmentError } = await supabase
+    .from("appointments")
+    .insert([
+      {
+        patient_id: patientId, // Associate with the newly created patient
+        service: data.services, // Ensure 'services' matches the expected type
+        branch: data.branch,
+        date: moment(data.date).format("YYYY-MM-DD"), // Use ISO format
+        time: data.time,
+      },
+    ])
+    .single();
+
+  if (appointmentError || !appointment) {
+    console.error("Error inserting appointment:", appointmentError?.message);
+    // Handle the error appropriately
+    return;
   }
 
-  if (callbackUrl) {
-    return redirect(callbackUrl);
-  }
+  console.log("Patient and appointment data inserted successfully");
 
-  return encodedRedirect(
-    "success",
-    "/forgot-password",
-    "Check your email for a link to reset your password.",
-  );
-};
-
-export const resetPasswordAction = async (formData: FormData) => {
-  const supabase = createClient();
-
-  const password = formData.get("password") as string;
-  const confirmPassword = formData.get("confirmPassword") as string;
-
-  if (!password || !confirmPassword) {
-    encodedRedirect(
-      "error",
-      "/protected/reset-password",
-      "Password and confirm password are required",
-    );
-  }
-
-  if (password !== confirmPassword) {
-    encodedRedirect(
-      "error",
-      "/protected/reset-password",
-      "Passwords do not match",
-    );
-  }
-
-  const { error } = await supabase.auth.updateUser({
-    password: password,
-  });
-
-  if (error) {
-    encodedRedirect(
-      "error",
-      "/protected/reset-password",
-      "Password update failed",
-    );
-  }
-
-  encodedRedirect("success", "/protected/reset-password", "Password updated");
-};
-
-export const signOutAction = async () => {
-  const supabase = createClient();
-  await supabase.auth.signOut();
-  return redirect("/sign-in");
-};
+  // Optionally, redirect to a confirmation page or another relevant page
+  redirect(`/patients/${patientId}`);
+}
