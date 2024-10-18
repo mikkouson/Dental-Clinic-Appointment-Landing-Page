@@ -325,7 +325,8 @@ const Maps = ({
               </p>
               <p>
                 <strong>Distance:</strong>{" "}
-                {directions.routes[0].legs[0].distance.text}
+                {directions.routes[0].legs[0].distance &&
+                  directions.routes[0].legs[0].distance.text}
               </p>
             </div>
           )}

@@ -18,6 +18,7 @@ import { RadioBtn } from "@/components/buttons/branchRadio";
 import Field from "../formField";
 import { Calendar } from "@/components/ui/calendar";
 import TimeSlot from "@/components/buttons/selectTime";
+
 // Inline type definitions for Address and Branch
 interface Address {
   id: number;
@@ -32,7 +33,7 @@ interface Branch {
   address: string;
   addr: number;
   addresses: Address;
-  preferred?: boolean; // Optional preferred flag
+  preferred?: boolean;
 }
 
 const sex = [
@@ -92,9 +93,9 @@ const PatientFields = ({ form, onSubmit }: PatientFieldsProps) => {
   if (error) return <div>Error loading branches</div>;
 
   // Annotate branches with 'preferred' flag based on nearestBranch
-  const annotatedBranches: Branch[] = branches.map((branch) => ({
+  const annotatedBranches: Branch[] = branches!.map((branch) => ({
     ...branch,
-    preferred: nearestBranch && branch.id === nearestBranch.id,
+    preferred: nearestBranch ? branch.id === nearestBranch.id : undefined,
   }));
 
   const selectedBranchs = form.watch("branch");
@@ -108,7 +109,7 @@ const PatientFields = ({ form, onSubmit }: PatientFieldsProps) => {
           <Field form={form} name={"name"} label={"Name"} />
           <Field form={form} name={"email"} label={"Email"} />
           <Field form={form} data={sex} name={"sex"} label={"Sex"} />
-          <Field form={form} name={"status"} label={"Status"} data={status} />
+          <Field form={form} name={"status"} label={"Status"} />
 
           {/* Phone Number Field */}
           <FormField
@@ -191,7 +192,7 @@ const PatientFields = ({ form, onSubmit }: PatientFieldsProps) => {
                   field={field}
                   data={annotatedBranches}
                   form={form}
-                  text={true} // Assuming you want a search input for branches
+                  text={true}
                 />
               </FormControl>
               <FormMessage>{fieldState.error?.message}</FormMessage>
@@ -214,16 +215,15 @@ const PatientFields = ({ form, onSubmit }: PatientFieldsProps) => {
               <FormLabel>Date</FormLabel>
               <Calendar
                 mode="single"
-                selected={field.value} // Bind the calendar's selected date to the form field value
-                onSelect={(date) => field.onChange(date)} // Update the form field on date selection
+                selected={field.value}
+                onSelect={(date) => field.onChange(date)}
                 className="rounded-md border shadow"
                 disabled={(date) => {
                   const today = new Date();
-                  today.setHours(0, 0, 0, 0); // Set today's time to midnight
+                  today.setHours(0, 0, 0, 0);
                   const maxDate = new Date(today);
-                  maxDate.setDate(today.getDate() + 29); // Set maxDate to 29 days from today
+                  maxDate.setDate(today.getDate() + 29);
 
-                  // Disable dates before today or after 29 days from today
                   return date < today || date > maxDate;
                 }}
               />
@@ -240,7 +240,7 @@ const PatientFields = ({ form, onSubmit }: PatientFieldsProps) => {
               <FormItem>
                 <FormLabel>Time</FormLabel>
                 <TimeSlot
-                  branch={selectedBranchs}
+                  branch={selectedBranchs.toString()}
                   field={field}
                   date={selectedDate}
                 />

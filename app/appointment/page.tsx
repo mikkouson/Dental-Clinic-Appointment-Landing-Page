@@ -3,22 +3,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { PatientSchema, PatientFormValues } from "@/app/types";
-import { cn } from "@/lib/utils";
-import useSWR from "swr";
 import { PatientCol } from "@/app/schema";
+import { PatientFormValues, PatientSchema } from "@/app/types";
 import PatientFields from "@/components/forms/patients/patientFields";
 import { toast } from "@/hooks/use-toast";
+import useSWR from "swr";
 import { newAppointment } from "../actions";
 
 const fetcher = (url: string): Promise<any> =>
   fetch(url).then((res) => res.json());
 
-export default function Page({
-  setOpen,
-}: {
-  setOpen: (open: boolean) => void;
-}) {
+export default function Page() {
   // Fetch patient data
   const { data: responseData, error } = useSWR("/api/patients/", fetcher);
 
