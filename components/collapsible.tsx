@@ -4,35 +4,16 @@ import { Card, CardContent, CardHeader } from "./ui/card";
 export default function DentalClinicFAQ() {
   const faqs = [
     {
-      question: "How can I add money to my account?",
+      question: "Do you accept online payments?",
       answer:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua, ut enim ad minim veniam.",
+        "Yes, we accept payments via GCash, online bank transfers, and credit cards",
     },
     {
-      question: "How do I get started with card payments?",
+      question: "When are you open?",
       answer:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua, ut enim ad minim veniam.",
+        "We are open from Monday to Friday at 10am-5pm and on Sundays at 10am-3pm",
     },
-    {
-      question: "How is my document data stored/secured?",
-      answer:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua, ut enim ad minim veniam.",
-    },
-    {
-      question: "Can I get a standard card for free?",
-      answer:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua, ut enim ad minim veniam.",
-    },
-    {
-      question: "I do not want to pay now, how can I proceed?",
-      answer:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua, ut enim ad minim veniam.",
-    },
-    {
-      question: "I don't have the required documents, how can I proceed?",
-      answer:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua, ut enim ad minim veniam.",
-    },
+
   ];
 
   return (

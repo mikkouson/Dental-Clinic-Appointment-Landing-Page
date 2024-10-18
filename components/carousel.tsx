@@ -19,9 +19,8 @@ export function CarouselSize() {
           What do our patients say?
         </h2>
         <p className="text-md text-muted-foreground w-1/2">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit vero
-          dolor magnam placeat alias non repellat accusamus molestiae modi
-          nobis.
+        Here at Lobodent, patient satisfaction is at the heart of everything we do. 
+        Hear from our patients about their experiences and how our team has helped them achieve healthy, confident smiles.
         </p>
       </div>
       <Carousel

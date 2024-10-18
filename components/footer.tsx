@@ -70,7 +70,7 @@ export default function Footer() {
             <li className="flex items-center mb-2">
               <MapPin className="w-5 h-5 text-gray-600 mr-2" />
               <span className="text-sm text-gray-600">
-                123 Dental St, Smile City, TX 78910
+                Brgy 1, R Building, Jose P Laurel Highway Marawoy Lipa City
               </span>
             </li>
             <li className="flex items-center mb-2">
@@ -79,7 +79,7 @@ export default function Footer() {
                 href="tel:+1234567890"
                 className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200"
               >
-                +1 (234) 567-890
+                0912 032 2767
               </Link>
             </li>
             <li className="flex items-center mb-2">

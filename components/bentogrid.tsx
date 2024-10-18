@@ -19,9 +19,8 @@ export function BentoGridDemo() {
           Our Services
         </h2>
         <p className="text-md text-muted-foreground w-1/2">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit vero
-          dolor magnam placeat alias non repellat accusamus molestiae modi
-          nobis.
+        Here at Lobodent, we offer a comprehensive range of dental care solutions designed to keep your smile healthy and bright. 
+        Explore our services and experience top-quality care tailored just for you.
         </p>
       </div>
 
@@ -40,57 +39,102 @@ export function BentoGridDemo() {
   );
 }
 
-const Skeleton = () => (
-  <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-neutral-200 dark:from-neutral-900 dark:to-neutral-800 to-neutral-100"></div>
+const Skeleton = ({children}) => (
+  <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-neutral-200 dark:from-neutral-900 dark:to-neutral-800 to-neutral-100">
+    {children}
+  </div>
 );
+
 const items = [
   {
-    title: "The Dawn of Innovation",
-    description: "Explore the birth of groundbreaking ideas and inventions.",
-    header: <Skeleton />,
-    icon: <IconClipboardCopy className="h-4 w-4 text-neutral-500" />,
+    title: "Dental Consultation",
+    description: "Receive personalized dental advice and care tailored to your oral health needs.",
+    header: (
+      <Skeleton>
+        <img src="/images/services/consultation.jpg" alt="Dental Consultation" className="object-cover w-full h-full rounded-xl" />
+      </Skeleton>
+    )
   },
   {
-    title: "The Digital Revolution",
-    description: "Dive into the transformative power of technology.",
-    header: <Skeleton />,
-    icon: <IconFileBroken className="h-4 w-4 text-neutral-500" />,
+    title: "Dental Cleaning",
+    description: "Keep your smile bright and your teeth healthy with professional dental cleaning.",
+    header:(
+      <Skeleton>
+        <img src="/images/services/cleaning.jpg" alt="Dental Cleaning" className="object-cover w-full h-full rounded-xl" />
+      </Skeleton>
+    )
   },
   {
-    title: "The Art of Design",
-    description: "Discover the beauty of thoughtful and functional design.",
-    header: <Skeleton />,
-    icon: <IconSignature className="h-4 w-4 text-neutral-500" />,
+    title: "Dental Fillings",
+    description: "Restore damaged teeth and maintain a natural look with our high-quality fillings.",
+    header: (
+      <Skeleton>
+        <img src="/images/services/filling.png" alt="Dental Fillings" className="object-cover w-full h-full rounded-xl" />
+      </Skeleton>
+    )
   },
   {
-    title: "The Power of Communication",
+    title: "Orthodontic Treatment/Braces",
     description:
-      "Understand the impact of effective communication in our lives.",
-    header: <Skeleton />,
-    icon: <IconTableColumn className="h-4 w-4 text-neutral-500" />,
+      "Achieve a straighter smile with our advanced braces and orthodontic treatments.",
+    header: (
+      <Skeleton>
+        <img src="/images/services/braces.jpg" alt="Braces" className="object-cover w-full h-full rounded-xl" />
+      </Skeleton>
+    )
   },
   {
-    title: "The Pursuit of Knowledge",
-    description: "Join the quest for understanding and enlightenment.",
-    header: <Skeleton />,
-    icon: <IconArrowWaveRightUp className="h-4 w-4 text-neutral-500" />,
+    title: "Wisdom Tooth Removal",
+    description: "Experience safe and effective wisdom tooth extraction to prevent future dental issues.",
+    header: (
+      <Skeleton>
+        <img src="/images/services/wisdom.png" alt="Wisdom Tooth Removal" className="object-cover w-full h-full rounded-xl" />
+      </Skeleton>
+    )
   },
   {
-    title: "The Joy of Creation",
-    description: "Experience the thrill of bringing ideas to life.",
-    header: <Skeleton />,
-    icon: <IconBoxAlignTopLeft className="h-4 w-4 text-neutral-500" />,
+    title: "Root Canal Treatment",
+    description: "Save your natural teeth and alleviate pain with expert root canal treatments.",
+    header: (
+      <Skeleton>
+        <img src="/images/services/root.jpg" alt="Root Canal Treatment" className="object-cover w-full h-full rounded-xl" />
+      </Skeleton>
+    )
   },
   {
-    title: "The Spirit of Adventure",
-    description: "Embark on exciting journeys and thrilling discoveries.",
-    header: <Skeleton />,
-    icon: <IconBoxAlignRightFilled className="h-4 w-4 text-neutral-500" />,
+    title: "Tooth Extraction",
+    description: "Remove problematic teeth with minimal discomfort and optimal care.",
+    header: (
+      <Skeleton>
+        <img src="/images/services/extract.jpg" alt="Tooth Extraction" className="object-cover w-full h-full rounded-xl" />
+      </Skeleton>
+    )
   },
   {
-    title: "The Spirit of Adventure",
-    description: "Embark on exciting journeys and thrilling discoveries.",
-    header: <Skeleton />,
-    icon: <IconBoxAlignRightFilled className="h-4 w-4 text-neutral-500" />,
+    title: "Laser Teeth Whitening",
+    description: "Brighten your smile with our safe and effective laser teeth whitening treatments.",
+    header: (
+      <Skeleton>
+        <img src="/images/services/laser.jpg" alt="Laser Teeth Whitening" className="object-cover w-full h-full rounded-xl" />
+      </Skeleton>
+    )
+  },
+  {
+    title: "Removable Partial Denture",
+    description: "Regain your confidence with custom-fitted, removable partial dentures.",
+    header: (
+      <Skeleton>
+        <img src="/images/services/denture.jpg" alt="Removable Partial Denture" className="object-cover w-full h-full rounded-xl" />
+      </Skeleton>
+    )
+  },
+  {
+    title: "Veneers, Crowns, and Bridges",
+    description: "Enhance your smile and restore damaged teeth with veneers, crowns, and bridges.",
+    header: (
+      <Skeleton>
+        <img src="/images/services/veneers.jpg" alt="Veneers" className="object-cover w-full h-full rounded-xl" />
+      </Skeleton>
+    )
   },
 ];
