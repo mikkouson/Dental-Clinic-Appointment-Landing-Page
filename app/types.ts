@@ -31,9 +31,7 @@ export const PatientSchema = z.object({
   dob: z.date({
     required_error: "A date of birth is required.",
   }),
-  status: z.string({
-    required_error: "A status is required.",
-  }),
+
   branch: z.number({
     required_error: "Please select an branch to display.",
   }),
