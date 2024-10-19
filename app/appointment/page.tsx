@@ -2,18 +2,22 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
+import { useState } from "react";
 import { PatientCol } from "@/app/schema";
 import { PatientFormValues, PatientSchema } from "@/app/types";
 import PatientFields from "@/components/forms/patients/patientFields";
 import { toast } from "@/hooks/use-toast";
 import useSWR from "swr";
 import { newAppointment } from "../actions";
+import Consent from "@/components/consent";
+import { Button } from "@/components/ui/button";
 
 const fetcher = (url: string): Promise<any> =>
   fetch(url).then((res) => res.json());
 
 export default function Page() {
+  const [showPatientFields, setShowPatientFields] = useState(false);
+
   // Fetch patient data
   const { data: responseData, error } = useSWR("/api/patients/", fetcher);
 
@@ -23,6 +27,8 @@ export default function Page() {
   // Initialize form with react-hook-form
   const form = useForm<z.infer<typeof PatientSchema>>({
     resolver: zodResolver(PatientSchema),
+    mode: "onChange", // Validates on change
+
     defaultValues: {
       name: "",
       email: "",
@@ -36,44 +42,45 @@ export default function Page() {
   };
 
   async function onSubmit(data: PatientFormValues) {
-    // Check if email already exists in fetched data
-    // const emailExists = await checkEmailExists(data.email);
+    // Call the server function and await its response
+    const result = await newAppointment(data);
 
-    // if (emailExists) {
-    //   form.setError("email", {
-    //     type: "manual",
-    //     message: "Email already exists",
-    //   });
-    //   return;
-    // }
+    if (!result.success) {
+      // Display an error toast with the message
+      toast({
+        title: "Error",
+        description: result.message,
+        variant: "destructive",
+      });
+      return;
+    }
 
-    newAppointment(data);
-    // setOpen(false);
-
-    form.reset();
+    // If appointment creation is successful, display a success toast
     toast({
-      title: "You submitted the following values:",
+      title: "Appointment created successfully",
       description: (
         <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
           <code className="text-white">{JSON.stringify(data, null, 2)}</code>
         </pre>
       ),
     });
+
+    // Reset the form if needed
+    form.reset();
+    setShowPatientFields(false); // Hide fields after submission
   }
 
   return (
     <>
-      <PatientFields form={form} onSubmit={onSubmit} />
-      <button
-        onClick={() => {
-          toast({
-            title: "Scheduled: Catch up",
-            description: "Friday, February 10, 2023 at 5:57 PM",
-          });
-        }}
-      >
-        Show Toast
-      </button>
+      {showPatientFields ? (
+        <PatientFields
+          form={form}
+          onSubmit={onSubmit}
+          setShowPatientFields={setShowPatientFields}
+        />
+      ) : (
+        <Consent setShowPatientFields={setShowPatientFields} />
+      )}
     </>
   );
 }

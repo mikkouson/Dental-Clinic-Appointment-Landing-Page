@@ -1,5 +1,4 @@
-// PatientFields.tsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Form,
   FormControl,
@@ -18,6 +17,8 @@ import { RadioBtn } from "@/components/buttons/branchRadio";
 import Field from "../formField";
 import { Calendar } from "@/components/ui/calendar";
 import TimeSlot from "@/components/buttons/selectTime";
+import { Stepper, Step } from "react-form-stepper"; // Ensure this is the correct Stepper component
+import { cn } from "@/lib/utils";
 
 // Inline type definitions for Address and Branch
 interface Address {
@@ -28,6 +29,7 @@ interface Address {
 }
 
 interface Branch {
+  description: string;
   id: number;
   name: string;
   address: string;
@@ -42,27 +44,26 @@ const sex = [
   { name: "Prefer not to say", id: "prefer_not_to_say" },
 ] as const;
 
-const status = [
-  { name: "Active", id: "Active" },
-  { name: "Inactive", id: "Inactive" },
-] as const;
-
 interface PatientFieldsProps {
   form: UseFormReturn<PatientFormValues>;
   onSubmit: (data: PatientFormValues) => void;
+  setShowPatientFields: (value: boolean) => void;
 }
 
 const fetcher = (url: string): Promise<Branch[]> =>
   fetch(url).then((res) => res.json());
 
-const PatientFields = ({ form, onSubmit }: PatientFieldsProps) => {
+const PatientFields = ({
+  form,
+  onSubmit,
+  setShowPatientFields,
+}: PatientFieldsProps) => {
   const {
     data: branches,
     error,
     isLoading,
   } = useSWR<Branch[]>("/api/branch/", fetcher);
 
-  const { data: appointments } = useSWR<Branch[]>("/api/apt/", fetcher);
   const { data: services } = useSWR("/api/services/", fetcher);
 
   const address = useWatch({
@@ -76,6 +77,10 @@ const PatientFields = ({ form, onSubmit }: PatientFieldsProps) => {
   });
 
   const [nearestBranch, setNearestBranch] = useState<Branch | null>(null);
+  const [currentStep, setCurrentStep] = useState(0); // Step control
+  const [travelData, setTravelData] = useState<
+    { branchId: number; duration: string; distance: string }[]
+  >([]);
 
   const selectedBranch =
     branches?.find((branch) => branch.id === selectedBranchId) || nearestBranch;
@@ -84,8 +89,46 @@ const PatientFields = ({ form, onSubmit }: PatientFieldsProps) => {
     onSubmit(data);
   };
 
+  const handleNextStep = async () => {
+    let validStep = false;
+
+    // Trigger validation for the fields of the current step before moving to the next one
+    if (currentStep === 0) {
+      validStep = await form.trigger([
+        "name",
+        "email",
+        "sex",
+        "address",
+        "phoneNumber",
+        "dob",
+      ]);
+    } else if (currentStep === 1) {
+      validStep = await form.trigger("branch");
+    } else if (currentStep === 2) {
+      validStep = await form.trigger("services");
+    } else if (currentStep === 3) {
+      validStep = await form.trigger(["date", "time"]);
+    }
+
+    if (validStep) {
+      setCurrentStep((prev) => prev + 1);
+    }
+  };
+
+  const handlePreviousStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep((prev) => prev - 1);
+    } else {
+      setShowPatientFields(false); // Return to Consent component
+      form.reset();
+    }
+  };
   const handleNearestBranchChange = (branch: Branch | null) => {
     setNearestBranch(branch);
+  };
+
+  const handleBranchSelect = (branchId: number) => {
+    form.setValue("branch", branchId);
   };
 
   if (isLoading) return <>Loading branches...</>;
@@ -100,158 +143,287 @@ const PatientFields = ({ form, onSubmit }: PatientFieldsProps) => {
 
   const selectedBranchs = form.watch("branch");
   const selectedDate = form.watch("date");
-  const time = form.watch("time");
-  console.log(form);
+  const handleTravelDataChange = (
+    data: { branchId: number; duration: string; distance: string }[]
+  ) => {
+    setTravelData(data);
+  };
+  const branchImages = [
+    "/images/branches/marawoy.png",
+    "/images/branches/dagatan.png",
+    "/images/branches/tanauan.png",
+  ];
+  const { isSubmitting } = form.formState;
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full p-2">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 w-full">
-          <Field form={form} name={"name"} label={"Name"} />
-          <Field form={form} name={"email"} label={"Email"} />
-          <Field form={form} data={sex} name={"sex"} label={"Sex"} />
-          <Field form={form} name={"status"} label={"Status"} />
-
-          {/* Phone Number Field */}
-          <FormField
-            control={form.control}
-            name="phoneNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <div className="relative ml-auto flex-1 md:grow-0">
-                    <p className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground text-sm">
-                      (+639)
-                    </p>
+        {/* Stepper */}
+        <Stepper
+          activeStep={currentStep}
+          styleConfig={{
+            activeBgColor: "#FBBF24", // Active step circle color (yellow)
+            completedBgColor: "#FBBF24", // Completed step circle color (yellow)
+            inactiveBgColor: "#E5E7EB", // Inactive step circle color
+            labelFontSize: "1rem",
+            circleFontSize: "1rem",
+            size: "2rem", // Size of step circles
+            activeTextColor: "#000000", // Active text color
+            completedTextColor: "#000000", // Completed text color
+            inactiveTextColor: "#6B7280", // Inactive text color
+            borderRadius: "50%", // Border radius for step circles
+            fontWeight: "bold", // Font weight for labels
+          }}
+        >
+          <Step label="Basic Info" />
+          <Step label="Branch" />
+          <Step label="Service" />
+          <Step label="Date & Time" />
+        </Stepper>
+        {/* Step 1: Basic Info */}
+        {currentStep === 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 w-full">
+            <Field form={form} name={"name"} label={"Name"} />
+            <Field form={form} name={"email"} label={"Email"} />
+            <Field form={form} data={sex} name={"sex"} label={"Sex"} />
+            {/* Phone Number Field */}
+            <FormField
+              control={form.control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <div className="relative ml-auto flex-1 md:grow-0">
+                      <p className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground text-sm">
+                        (+639)
+                      </p>
+                      <Input
+                        type="number"
+                        className="w-full rounded-lg bg-background pl-16 "
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* Date of Birth Field */}
+            <FormField
+              control={form.control}
+              name="dob"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date of Birth</FormLabel>
+                  <FormControl>
                     <Input
-                      type="number"
-                      className="w-full rounded-lg bg-background pl-16 "
-                      {...field}
+                      min="1899-01-01"
+                      max={new Date().toISOString().split("T")[0]} // Set max date to today
+                      type="date"
+                      value={
+                        field.value instanceof Date
+                          ? field.value.toISOString().split("T")[0]
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const selectedDate = new Date(e.target.value);
+                        field.onChange(selectedDate);
+                      }}
                     />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {/* Date of Birth Field */}
-          <FormField
-            control={form.control}
-            name="dob"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date of Birth</FormLabel>
-                <FormControl>
-                  <Input
-                    type="date"
-                    value={
-                      field.value instanceof Date
-                        ? field.value.toISOString().split("T")[0]
-                        : ""
-                    }
-                    onChange={(e) => {
-                      const selectedDate = new Date(e.target.value);
-                      field.onChange(selectedDate);
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <Maps
+                      field={field}
+                      onNearestBranchChange={handleNearestBranchChange}
+                      onTravelDataChange={handleTravelDataChange} // Pass the handler for travel data change
+                      selectedBranch={selectedBranch}
+                      branches={annotatedBranches}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+        {/* Step 2: Branch Selection */}
+        {currentStep === 1 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {annotatedBranches.map((branch, index) => (
+              <div
+                key={branch.id}
+                className="max-w-xs w-full group/card"
+                onClick={() => handleBranchSelect(branch.id)}
+              >
+                <div
+                  className={cn(
+                    "relative card h-96 rounded-md shadow-xl max-w-sm mx-auto flex flex-col justify-between p-4 cursor-pointer overflow-hidden",
+                    selectedBranchId === branch.id
+                      ? "ring-4 ring-yellow-500"
+                      : ""
+                  )}
+                >
+                  {/* Background image with brightness filter and hover effect */}
+                  <div
+                    className={cn(
+                      "absolute inset-0 bg-cover bg-center transition-all duration-300",
+                      selectedBranchId === branch.id
+                        ? "brightness-[1.75]" // Much higher brightness for selected branch
+                        : "group-hover/card:brightness-100 brightness-75"
+                    )}
+                    style={{
+                      backgroundImage: `linear-gradient(to bottom right, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0)), url(${branchImages[index % branchImages.length]})`,
                     }}
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {/* Address Field */}
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Maps
-                    field={field}
-                    onNearestBranchChange={handleNearestBranchChange}
-                    selectedBranch={selectedBranch}
-                    branches={annotatedBranches}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
 
-        {/* Branch Selection Field */}
-        <FormField
-          control={form.control}
-          name="branch"
-          render={({ field, fieldState }) => (
-            <FormItem>
-              <FormLabel>Branch</FormLabel>
-              <FormControl>
-                <RadioBtn
-                  field={field}
-                  data={annotatedBranches}
-                  form={form}
-                  text={true}
-                />
-              </FormControl>
-              <FormMessage>{fieldState.error?.message}</FormMessage>
-            </FormItem>
-          )}
-        />
+                  {/* Dark overlay with hover effect */}
+                  <div className="absolute inset-0 bg-black opacity-20 transition-all duration-300 group-hover/card:opacity-20"></div>
 
-        <Field
-          form={form}
-          name={"services"}
-          label={"Services"}
-          data={services}
-        />
+                  <div className="relative z-10 flex flex-row items-center space-x-4">
+                    <div className="flex flex-col">
+                      {branch.preferred && (
+                        <p className="font-normal text-base text-green-400">
+                          Preferred
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
-        <FormField
-          name="date"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date</FormLabel>
-              <Calendar
-                mode="single"
-                selected={field.value}
-                onSelect={(date) => field.onChange(date)}
-                className="rounded-md border shadow"
-                disabled={(date) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  const maxDate = new Date(today);
-                  maxDate.setDate(today.getDate() + 29);
-
-                  return date < today || date > maxDate;
-                }}
-              />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {selectedBranchs && (
-          <FormField
-            control={form.control}
-            name="time"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Time</FormLabel>
-                <TimeSlot
-                  branch={selectedBranchs.toString()}
-                  field={field}
-                  date={selectedDate}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <div className="relative z-10 text content">
+                    <h1 className="font-bold text-xl md:text-2xl text-gray-50">
+                      {branch.name}
+                    </h1>
+                    <p className="font-normal text-sm text-gray-50">
+                      <span className="font-medium">
+                        Estimated Travel Time:{" "}
+                      </span>
+                      {travelData.find((d) => d.branchId === branch.id)
+                        ?.duration || "Calculating..."}
+                    </p>
+                    <p className="font-normal text-sm text-gray-50">
+                      <span className="font-medium">Distance: </span>
+                      {travelData.find((d) => d.branchId === branch.id)
+                        ?.distance || "Calculating..."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {/* Step 3: Service Selection */}
+        {currentStep === 2 && (
+          <div className="grid grid-cols-1 gap-4">
+            {" "}
+            {/* Single column grid */}
+            {services?.map((service, index) => (
+              <div
+                key={service.id}
+                className="w-full group/card"
+                onClick={() => form.setValue("services", service.id)}
+              >
+                <div
+                  className={cn(
+                    "flex justify-between p-2 rounded-lg border cursor-pointer", // Reduced height (h-32)
+                    form.watch("services") === service.id
+                      ? "ring-2 ring-yellow-500" // Highlight selected service with a border
+                      : ""
+                  )}
+                >
+                  {/* Service Name and Description */}
+                  <div className="">
+                    <h1 className="font-bold text-xl text-gray-900">
+                      {service.name}
+                    </h1>
+                    <p className="font-normal text-sm text-gray-700">
+                      {service.description || "Description not available"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
-        <div className="flex justify-end">
-          <Button type="submit">Submit</Button>
+        {/* Step 4: Date & Time Selection */}
+        {currentStep === 3 && (
+          <div className="flex">
+            <FormField
+              name="date"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date</FormLabel>
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={(date) => {
+                      field.onChange(date);
+                      form.setValue("time", 0); // Reset the time field when the date changes
+                    }}
+                    className="rounded-md border shadow"
+                    disabled={(date) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      const maxDate = new Date(today);
+                      maxDate.setDate(today.getDate() + 29);
+
+                      return date < today || date > maxDate;
+                    }}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="w-full ml-8">
+              {selectedBranchs && (
+                <FormField
+                  control={form.control}
+                  name="time"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Time</FormLabel>
+                      <TimeSlot
+                        branch={selectedBranchs.toString()}
+                        field={field}
+                        date={selectedDate}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+          </div>
+        )}
+        <div className="flex justify-between mt-4">
+          <Button onClick={handlePreviousStep} type="button">
+            Back
+          </Button>
+
+          {currentStep < 3 && (
+            <Button onClick={handleNextStep} type="button">
+              Next
+            </Button>
+          )}
+          {currentStep === 3 && (
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </Button>
+          )}
         </div>
       </form>
     </Form>

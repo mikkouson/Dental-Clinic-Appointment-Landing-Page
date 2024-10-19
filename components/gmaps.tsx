@@ -1,4 +1,3 @@
-// Maps.tsx
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,9 +24,12 @@ interface Branch {
   addr: number;
   addresses: Address;
   preferred?: boolean; // Optional preferred flag
+  description?: string;
 }
 
 type MapsProps = {
+  onNearestBranchChange: any;
+  selectedBranch: any;
   field: {
     name: string;
     onChange: (value: any) => void;
@@ -39,8 +41,10 @@ type MapsProps = {
       id?: number;
     };
   };
-  onNearestBranchChange?: (branch: Branch | null) => void;
-  selectedBranch?: Branch | null;
+
+  onTravelDataChange?: (
+    data: { branchId: number; duration: string; distance: string }[]
+  ) => void; // New prop for travel data change
   branches: Branch[]; // Now includes 'preferred' flag
 };
 
@@ -49,6 +53,8 @@ const Maps = ({
   onNearestBranchChange,
   selectedBranch,
   branches,
+  onTravelDataChange, // New prop to handle travel data change
+  ...props
 }: MapsProps) => {
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const { isLoaded, loadError } = useGoogleMapsLoader();
@@ -67,10 +73,7 @@ const Maps = ({
       onNearestBranchChange(nearest);
     }
     if (nearest) {
-      fetchDirections(latLng.lat, latLng.lng, {
-        lat: nearest.addresses.latitude,
-        lng: nearest.addresses.longitude,
-      });
+      fetchDirectionsForAllBranches(latLng.lat, latLng.lng);
     }
   };
 
@@ -162,13 +165,19 @@ const Maps = ({
     [branches]
   );
 
-  const fetchDirections = useCallback(
-    (
-      userLat: number,
-      userLng: number,
-      destination: { lat: number; lng: number }
-    ) => {
-      const directionsService = new google.maps.DirectionsService();
+  const fetchDirectionsForAllBranches = (userLat: number, userLng: number) => {
+    const directionsService = new google.maps.DirectionsService();
+    const travelDataTemp: {
+      branchId: number;
+      duration: string;
+      distance: string;
+    }[] = [];
+
+    branches.forEach((branch) => {
+      const destination = {
+        lat: branch.addresses.latitude,
+        lng: branch.addresses.longitude,
+      };
 
       directionsService.route(
         {
@@ -178,33 +187,54 @@ const Maps = ({
         },
         (result, status) => {
           if (status === google.maps.DirectionsStatus.OK && result) {
-            setDirections(result);
+            const duration = result.routes[0].legs[0].duration?.text || "N/A";
+            const distance = result.routes[0].legs[0].distance?.text || "N/A";
+
+            travelDataTemp.push({
+              branchId: branch.id,
+              duration: duration,
+              distance: distance,
+            });
+
+            if (travelDataTemp.length === branches.length) {
+              onTravelDataChange?.(travelDataTemp); // Pass the travel data back to the parent component
+            }
           } else {
-            console.error("Directions request failed due to:", status);
-            setDirections(null);
+            console.error(
+              `Directions request failed for branch ${branch.id}: ${status}`
+            );
           }
         }
       );
-    },
-    []
-  );
+    });
+  };
 
-  // Update directions when selectedBranch or nearestBranch changes
+  // Fetch directions for the selected or nearest branch when latitude and longitude are available
   useEffect(() => {
-    if (!latitude || !longitude) return;
-
-    if (selectedBranch) {
-      fetchDirections(latitude, longitude, {
-        lat: selectedBranch.addresses.latitude,
-        lng: selectedBranch.addresses.longitude,
-      });
-    } else if (nearestBranch) {
-      fetchDirections(latitude, longitude, {
-        lat: nearestBranch.addresses.latitude,
-        lng: nearestBranch.addresses.longitude,
-      });
+    if (latitude && longitude) {
+      const nearest = calculateNearestBranch(latitude, longitude);
+      if (nearest) {
+        const directionsService = new google.maps.DirectionsService();
+        directionsService.route(
+          {
+            origin: { lat: latitude, lng: longitude },
+            destination: {
+              lat: nearest.addresses.latitude,
+              lng: nearest.addresses.longitude,
+            },
+            travelMode: google.maps.TravelMode.DRIVING,
+          },
+          (result, status) => {
+            if (status === google.maps.DirectionsStatus.OK && result) {
+              setDirections(result);
+            } else {
+              console.error("Directions request failed:", status);
+            }
+          }
+        );
+      }
     }
-  }, [selectedBranch, nearestBranch, latitude, longitude, fetchDirections]);
+  }, [latitude, longitude]);
 
   if (loadError) {
     return <div>Error loading maps</div>;
@@ -230,106 +260,81 @@ const Maps = ({
         />
       </Autocomplete>
 
-      <div className="relative h-96 mt-4">
-        <GoogleMap
-          mapContainerStyle={{ height: "100%", width: "100%" }}
-          center={
-            latitude && longitude
-              ? { lat: latitude, lng: longitude }
-              : { lat: 13.960027, lng: 121.165852 } // Default center
-          }
-          zoom={10}
-        >
-          {latitude && longitude && (
-            <Marker
-              position={{ lat: latitude, lng: longitude }}
-              draggable
-              onDragEnd={handleMarkerDragEnd}
-              title="Your address is here"
-              zIndex={999} // Ensure this marker is on top
-              options={{
-                label: {
-                  text: "Your address",
-                  fontWeight: "bold",
-                  fontSize: "14px",
-                },
-                icon: {
-                  url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-                  labelOrigin: new google.maps.Point(15, -10),
-                },
-              }}
-            />
-          )}
+      {branches && (
+        <div className="relative h-96 mt-4">
+          <GoogleMap
+            mapContainerStyle={{ height: "100%", width: "100%" }}
+            center={
+              latitude && longitude
+                ? { lat: latitude, lng: longitude }
+                : { lat: 13.960027, lng: 121.165852 } // Default center
+            }
+            zoom={10}
+          >
+            {latitude && longitude && (
+              <Marker
+                position={{ lat: latitude, lng: longitude }}
+                draggable
+                onDragEnd={handleMarkerDragEnd}
+                title="Your address is here"
+                zIndex={999} // Ensure this marker is on top
+                options={{
+                  label: {
+                    text: "Your address",
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                  },
+                  icon: {
+                    url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                    labelOrigin: new google.maps.Point(15, -10),
+                  },
+                }}
+              />
+            )}
 
-          {branches.map((branch) => (
-            <Marker
-              key={branch.id}
-              position={{
-                lat: branch.addresses.latitude,
-                lng: branch.addresses.longitude,
-              }}
-              title={branch.name}
-              zIndex={1} // Ensure branch markers are behind
-              options={{
-                label: {
-                  text: branch.name,
-                  fontWeight: "bold",
-                  fontSize: "14px",
-                },
-                icon: {
-                  url: branch.preferred
-                    ? "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png" // Preferred branch marker color
-                    : "http://maps.google.com/mapfiles/ms/icons/blue-dot.png", // Regular branch marker color
-                  labelOrigin: new google.maps.Point(15, -10),
-                },
-              }}
-              onClick={() =>
-                alert(`${branch.name}\n${branch.addresses.address}`)
-              }
-            />
-          ))}
+            {branches.map((branch) => (
+              <Marker
+                key={branch.id}
+                position={{
+                  lat: branch.addresses.latitude,
+                  lng: branch.addresses.longitude,
+                }}
+                title={branch.name}
+                zIndex={1} // Ensure branch markers are behind
+                options={{
+                  label: {
+                    text: branch.name,
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                  },
+                  icon: {
+                    url: branch.preferred
+                      ? "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png" // Preferred branch marker color
+                      : "http://maps.google.com/mapfiles/ms/icons/blue-dot.png", // Regular branch marker color
+                    labelOrigin: new google.maps.Point(15, -10),
+                  },
+                }}
+                onClick={() =>
+                  alert(`${branch.name}\n${branch.addresses.address}`)
+                }
+              />
+            ))}
 
-          {directions && (
-            <DirectionsRenderer
-              directions={directions}
-              options={{
-                suppressMarkers: true,
-                polylineOptions: {
-                  strokeColor: "#ff1100", // Set the line color to red
-                  strokeWeight: 4,
-                },
-              }}
-            />
-          )}
+            {directions && (
+              <DirectionsRenderer
+                directions={directions}
+                options={{
+                  suppressMarkers: true,
+                  polylineOptions: {
+                    strokeColor: "#ff1100", // Set the line color to red
+                    strokeWeight: 4,
+                  },
+                }}
+              />
+            )}
 
-          <TrafficLayer />
-        </GoogleMap>
-      </div>
-      {latitude && longitude && (
-        <div className="mt-4">
-          {nearestBranch && (
-            <div className="mt-2">
-              <p>
-                <strong>Nearest Branch:</strong> {nearestBranch.name}
-              </p>
-              <p>
-                <strong>Address:</strong> {nearestBranch.addresses.address}
-              </p>
-            </div>
-          )}
-          {directions && directions.routes[0].legs[0].duration && (
-            <div className="mt-2">
-              <p>
-                <strong>Estimated Travel Time:</strong>{" "}
-                {directions.routes[0].legs[0].duration.text}
-              </p>
-              <p>
-                <strong>Distance:</strong>{" "}
-                {directions.routes[0].legs[0].distance &&
-                  directions.routes[0].legs[0].distance.text}
-              </p>
-            </div>
-          )}
+            <TrafficLayer />
+          </GoogleMap>
         </div>
       )}
     </div>
