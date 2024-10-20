@@ -51,17 +51,18 @@ export default function RootLayout({
                 <ul className="flex gap-4">
                   <li className="font-medium">
                     <small className="text-sm  leading-none ">
-                      <Link href="/">Home</Link>
+                      <Link href="#home">Home</Link>
                     </small>
                   </li>
                   <li className="text-muted-foreground">
                     <small className="text-sm font-light leading-none">
-                      <Link href="/">About us</Link>
+                    <Link href="#services">Services</Link>
                     </small>
                   </li>
                   <li className="text-muted-foreground">
                     <small className="text-sm font-light leading-none">
-                      <Link href="/">Services</Link>
+                      
+                      <Link href="#feedback">Feedbacks</Link>
                     </small>
                   </li>
                   <li className="text-muted-foreground">
@@ -71,7 +72,7 @@ export default function RootLayout({
                   </li>
                   <li className="text-muted-foreground">
                     <small className="text-sm font-light leading-none">
-                      <Link href="/">FAQs</Link>
+                      <Link href="#faq">FAQs</Link>
                     </small>
                   </li>
                 </ul>

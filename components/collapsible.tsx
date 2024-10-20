@@ -17,7 +17,7 @@ export default function DentalClinicFAQ() {
   ];
 
   return (
-    <div className="faq-container  my-8  p-4">
+    <div id="faq" className="faq-container  my-8  p-4">
       <h2 className="text-3xl font-semibold mb-6">FAQs</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {faqs.map((faq, index) => (

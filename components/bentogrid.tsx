@@ -6,7 +6,7 @@ type SkeletonProps = {
 export function BentoGridDemo() {
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between gap-4 mb-8">
+      <div id="services" className="flex justify-between gap-4 mb-8">
         <h2 className="mt-10 scroll-m-20 pb-2 text-4xl font-semibold tracking-tight transition-colors first:mt-0 ">
           Our Services
         </h2>
