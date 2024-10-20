@@ -1,9 +1,14 @@
 "use server";
 
+import { PatientFormValues, PatientSchema } from "@/app/types";
+import DentalAppointmentPendingEmail from "@/components/emailTemplates/pendingAppointment";
 import { createClient } from "@/utils/supabase/server";
 import moment from "moment";
-import { z } from "zod";
-import { PatientFormValues, PatientSchema } from "@/app/types";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Helper function to normalize names
 function normalizeName(name: string, length = 10) {
@@ -15,7 +20,7 @@ async function insertAddress(addressData: {
   address: string;
   latitude: number;
   longitude: number;
-}) {
+}): Promise<number> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("addresses")
@@ -24,18 +29,7 @@ async function insertAddress(addressData: {
     .single();
 
   if (error || !data) {
-    let errorMessage = "Address insertion failed";
-
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else if (
-      typeof error === "object" &&
-      error !== null &&
-      "message" in error
-    ) {
-      errorMessage = (error as any).message;
-    }
-
+    const errorMessage = error?.message || "Address insertion failed";
     console.error("Error inserting address:", errorMessage);
     throw new Error(errorMessage);
   }
@@ -43,12 +37,49 @@ async function insertAddress(addressData: {
   return data.id;
 }
 
+// Function to create a new patient
+async function createNewPatient(data: PatientFormValues): Promise<number> {
+  const supabase = createClient();
+
+  const addressId = await insertAddress({
+    address: data.address.address,
+    latitude: data.address.latitude,
+    longitude: data.address.longitude,
+  });
+
+  const { data: newPatient, error: newPatientError } = await supabase
+    .from("patients")
+    .insert([
+      {
+        name: data.name,
+        dob: moment(data.dob).format("YYYY-MM-DD"),
+        email: data.email,
+        phone_number: data.phoneNumber,
+        sex: data.sex,
+        status: "active",
+        address: addressId,
+      },
+    ])
+    .select("id")
+    .single();
+
+  if (newPatientError || !newPatient) {
+    const errorMessage =
+      newPatientError?.message || "Error creating new patient";
+    console.error("Error creating new patient:", errorMessage);
+    throw new Error(errorMessage);
+  }
+
+  console.log(`New patient created with ID: ${newPatient.id}`);
+  return newPatient.id;
+}
+
 export async function newAppointment(data: PatientFormValues) {
   // Validate the incoming data
   const result = PatientSchema.safeParse(data);
 
   if (!result.success) {
-    console.log("Validation errors:", result.error.format());
+    console.error("Validation errors:", result.error.format());
     return {
       success: false,
       message: "Validation errors",
@@ -72,18 +103,8 @@ export async function newAppointment(data: PatientFormValues) {
     .or(`email.eq.${data.email},phone_number.eq.${data.phoneNumber}`);
 
   if (existingPatientError) {
-    let errorMessage = "Error fetching patient";
-
-    if (existingPatientError instanceof Error) {
-      errorMessage = existingPatientError.message;
-    } else if (
-      typeof existingPatientError === "object" &&
-      existingPatientError !== null &&
-      "message" in existingPatientError
-    ) {
-      errorMessage = (existingPatientError as any).message;
-    }
-
+    const errorMessage =
+      existingPatientError.message || "Error fetching patient";
     console.error("Error fetching patient:", errorMessage);
     return {
       success: false,
@@ -91,75 +112,21 @@ export async function newAppointment(data: PatientFormValues) {
     };
   }
 
-  let patientId;
+  let patientId: number;
 
   if (!existingPatients || existingPatients.length === 0) {
     console.log(
       "No patient found with the given details. Creating a new patient."
     );
-
-    let addressId;
     try {
-      addressId = await insertAddress({
-        address: data.address.address,
-        latitude: data.address.latitude,
-        longitude: data.address.longitude,
-      });
-    } catch (error) {
-      let errorMessage = "Error creating new patient";
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (
-        typeof error === "object" &&
-        error !== null &&
-        "message" in error
-      ) {
-        errorMessage = (error as any).message;
-      }
-
+      patientId = await createNewPatient(data);
+    } catch (error: any) {
+      console.error("Error creating new patient:", error.message);
       return {
         success: false,
-        message: errorMessage,
+        message: error.message || "Error creating new patient",
       };
     }
-
-    // Create a new patient with the address
-    const { data: newPatient, error: newPatientError } = await supabase
-      .from("patients")
-      .insert([
-        {
-          name: data.name,
-          dob: formattedDOB,
-          email: data.email,
-          phone_number: data.phoneNumber,
-          address: addressId,
-          // Include any other required fields
-        },
-      ])
-      .select("id");
-    if (newPatientError) {
-      let errorMessage = "Error creating new patient";
-
-      if (newPatientError instanceof Error) {
-        errorMessage = newPatientError.message;
-      } else if (
-        typeof newPatientError === "object" &&
-        newPatientError !== null &&
-        "message" in newPatientError
-      ) {
-        errorMessage = (newPatientError as any).message;
-      }
-
-      console.error("Error creating new patient:", errorMessage);
-      return {
-        success: false,
-        message: errorMessage,
-      };
-    }
-
-    patientId = newPatient[0].id;
-    console.log("New patient created with ID:", patientId);
   } else {
     // Filter patients by normalized name
     const matchingPatients = existingPatients.filter((patient) => {
@@ -171,72 +138,15 @@ export async function newAppointment(data: PatientFormValues) {
       console.log(
         "No patient found with the given name and DOB. Creating a new patient."
       );
-
-      let addressId;
       try {
-        addressId = await insertAddress({
-          address: data.address.address,
-          latitude: data.address.latitude,
-          longitude: data.address.longitude,
-        });
-      } catch (error) {
-        let errorMessage = "Error creating new patient";
-
-        if (error instanceof Error) {
-          errorMessage = error.message;
-        } else if (
-          typeof error === "object" &&
-          error !== null &&
-          "message" in error
-        ) {
-          errorMessage = (error as any).message;
-        }
-
+        patientId = await createNewPatient(data);
+      } catch (error: any) {
+        console.error("Error creating new patient:", error.message);
         return {
           success: false,
-          message: errorMessage,
+          message: error.message || "Error creating new patient",
         };
       }
-
-      // Create a new patient with the address
-      const { data: newPatient, error: newPatientError } = await supabase
-        .from("patients")
-        .insert([
-          {
-            name: data.name,
-            dob: formattedDOB,
-            email: data.email,
-            phone_number: data.phoneNumber,
-            sex: data.sex,
-            status: "active",
-            address: addressId, // Include the address ID here
-            // Include any other required fields
-          },
-        ])
-        .select("id");
-
-      if (newPatientError) {
-        let errorMessage = "Error creating new patient";
-
-        if (newPatientError instanceof Error) {
-          errorMessage = newPatientError.message;
-        } else if (
-          typeof newPatientError === "object" &&
-          newPatientError !== null &&
-          "message" in newPatientError
-        ) {
-          errorMessage = (newPatientError as any).message;
-        }
-
-        console.error("Error creating new patient:", errorMessage);
-        return {
-          success: false,
-          message: errorMessage,
-        };
-      }
-
-      patientId = newPatient[0].id;
-      console.log("New patient created with ID:", patientId);
     } else if (matchingPatients.length > 1) {
       console.error(
         "Multiple patients found with the same details. Consider refining the search."
@@ -248,7 +158,7 @@ export async function newAppointment(data: PatientFormValues) {
       };
     } else {
       patientId = matchingPatients[0].id;
-      console.log("Patient exists with ID:", patientId);
+      console.log(`Patient exists with ID: ${patientId}`);
     }
   }
 
@@ -263,18 +173,8 @@ export async function newAppointment(data: PatientFormValues) {
       .eq("date", appointmentDate);
 
   if (existingAppointmentsError) {
-    let errorMessage = "Error fetching appointments";
-
-    if (existingAppointmentsError instanceof Error) {
-      errorMessage = existingAppointmentsError.message;
-    } else if (
-      typeof existingAppointmentsError === "object" &&
-      existingAppointmentsError !== null &&
-      "message" in existingAppointmentsError
-    ) {
-      errorMessage = (existingAppointmentsError as any).message;
-    }
-
+    const errorMessage =
+      existingAppointmentsError.message || "Error fetching appointments";
     console.error("Error fetching appointments:", errorMessage);
     return {
       success: false,
@@ -297,40 +197,93 @@ export async function newAppointment(data: PatientFormValues) {
     .from("appointments")
     .insert([
       {
-        patient_id: patientId, // Associate with the existing or newly created patient
-        service: data.services, // Ensure 'services' matches the expected type
+        patient_id: patientId,
+        service: data.services,
         branch: data.branch,
-        date: appointmentDate, // Use ISO format
+        date: appointmentDate,
         time: data.time,
         type: "online",
         status: 2,
       },
-    ]);
+    ])
+    .select("*")
+    .single();
 
-  if (newAppointmentError) {
-    let errorMessage = "Error creating appointment";
+  console.log(
+    `Appointment created successfully: ${JSON.stringify(newAppointment)}`
+  );
 
-    if (newAppointmentError instanceof Error) {
-      errorMessage = newAppointmentError.message;
-    } else if (
-      typeof newAppointmentError === "object" &&
-      newAppointmentError !== null &&
-      "message" in newAppointmentError
-    ) {
-      errorMessage = (newAppointmentError as any).message;
-    }
+  await pendingAppointment({ aptId: newAppointment.id });
 
-    console.error("Error creating appointment:", errorMessage);
-    return {
-      success: false,
-      message: errorMessage,
-    };
-  }
-
-  console.log("Appointment created successfully:", newAppointment);
   return {
     success: true,
     message: "Appointment created successfully.",
     appointment: newAppointment,
   };
+}
+
+interface AppointmentActionProps {
+  aptId: number;
+}
+
+export async function pendingAppointment({ aptId }: AppointmentActionProps) {
+  const supabase = createClient();
+
+  try {
+    // Combine status and appointment_ticket updates in one query
+    const { data: appointmentData, error: updateError } = await supabase
+      .from("appointments")
+      .update({
+        status: 2,
+      })
+      .eq("id", aptId)
+      .select(
+        `
+        *,
+        patients (
+          *
+        )
+      `
+      )
+      .single();
+
+    if (updateError) {
+      throw new Error(`Error updating appointment: ${updateError.message}`);
+    }
+
+    // Extract patient email from the related patient data
+    const patientEmail = appointmentData.patients?.email;
+
+    if (!patientEmail) {
+      throw new Error(
+        "No email found for the patient associated with this appointment."
+      );
+    }
+
+    // Send the confirmation email using the retrieved appointment data
+    const emailResponse = await resend.emails.send({
+      from: "Appointment@email.lobodentdentalclinic.online",
+      to: [patientEmail], // Send to the patient's email
+      subject: "Appointment Application",
+      react: DentalAppointmentPendingEmail() as React.ReactElement, // Ensure this matches your email service's expected format
+    });
+
+    // Check if the email was sent successfully
+    if (emailResponse.error) {
+      throw new Error(
+        `Error sending confirmation email: ${emailResponse.error.message}`
+      );
+    }
+
+    console.log("Appointment rejection email sent to:", patientEmail);
+
+    // Revalidate the path to update the cache
+    revalidatePath("/");
+  } catch (error) {
+    // Catch any errors that occur during the process and log them
+    console.error("An error occurred during appointment acceptance:", error);
+  }
+
+  // Redirect after all the async operations are complete
+  redirect("/appointment");
 }

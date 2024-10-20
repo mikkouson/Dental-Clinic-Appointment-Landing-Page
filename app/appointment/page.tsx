@@ -57,17 +57,14 @@ export default function Page() {
 
     // If appointment creation is successful, display a success toast
     toast({
-      title: "Appointment created successfully",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
+      title: "Success",
+      description: "Appointment created successfully!",
+      variant: "success",
     });
 
     // Reset the form if needed
-    form.reset();
-    setShowPatientFields(false); // Hide fields after submission
+    // form.reset();
+    // setShowPatientFields(false); // Hide fields after submission
   }
 
   return (

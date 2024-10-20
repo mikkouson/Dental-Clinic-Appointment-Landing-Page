@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Form,
   FormControl,
@@ -17,10 +17,9 @@ import { RadioBtn } from "@/components/buttons/branchRadio";
 import Field from "../formField";
 import { Calendar } from "@/components/ui/calendar";
 import TimeSlot from "@/components/buttons/selectTime";
-import { Stepper, Step } from "react-form-stepper"; // Ensure this is the correct Stepper component
+import { Stepper, Step } from "react-form-stepper";
 import { cn } from "@/lib/utils";
 
-// Inline type definitions for Address and Branch
 interface Address {
   id: number;
   address: string;
@@ -58,6 +57,10 @@ const PatientFields = ({
   onSubmit,
   setShowPatientFields,
 }: PatientFieldsProps) => {
+  useEffect(() => {
+    form.setValue("date", new Date()); // Set the default date to today
+  }, [form]);
+
   const {
     data: branches,
     error,
@@ -77,7 +80,7 @@ const PatientFields = ({
   });
 
   const [nearestBranch, setNearestBranch] = useState<Branch | null>(null);
-  const [currentStep, setCurrentStep] = useState(0); // Step control
+  const [currentStep, setCurrentStep] = useState(0);
   const [travelData, setTravelData] = useState<
     { branchId: number; duration: string; distance: string }[]
   >([]);
@@ -92,7 +95,6 @@ const PatientFields = ({
   const handleNextStep = async () => {
     let validStep = false;
 
-    // Trigger validation for the fields of the current step before moving to the next one
     if (currentStep === 0) {
       validStep = await form.trigger([
         "name",
@@ -119,7 +121,7 @@ const PatientFields = ({
     if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
     } else {
-      setShowPatientFields(false); // Return to Consent component
+      setShowPatientFields(false);
       form.reset();
     }
   };
@@ -135,7 +137,6 @@ const PatientFields = ({
 
   if (error) return <div>Error loading branches</div>;
 
-  // Annotate branches with 'preferred' flag based on nearestBranch
   const annotatedBranches: Branch[] = branches!.map((branch) => ({
     ...branch,
     preferred: nearestBranch ? branch.id === nearestBranch.id : undefined,
@@ -158,21 +159,21 @@ const PatientFields = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full p-2">
-        {/* Stepper */}
         <Stepper
           activeStep={currentStep}
+          nonLinear={true}
           styleConfig={{
-            activeBgColor: "#FBBF24", // Active step circle color (yellow)
-            completedBgColor: "#FBBF24", // Completed step circle color (yellow)
-            inactiveBgColor: "#E5E7EB", // Inactive step circle color
+            activeBgColor: "#FBBF24",
+            completedBgColor: "#FBBF24",
+            inactiveBgColor: "#E5E7EB",
             labelFontSize: "1rem",
             circleFontSize: "1rem",
-            size: "2rem", // Size of step circles
-            activeTextColor: "#000000", // Active text color
-            completedTextColor: "#000000", // Completed text color
-            inactiveTextColor: "#6B7280", // Inactive text color
-            borderRadius: "50%", // Border radius for step circles
-            fontWeight: "bold", // Font weight for labels
+            size: "2rem",
+            activeTextColor: "#000000",
+            completedTextColor: "#000000",
+            inactiveTextColor: "#6B7280",
+            borderRadius: "50%",
+            fontWeight: "bold",
           }}
         >
           <Step label="Basic Info" />
@@ -180,13 +181,12 @@ const PatientFields = ({
           <Step label="Service" />
           <Step label="Date & Time" />
         </Stepper>
-        {/* Step 1: Basic Info */}
+
         {currentStep === 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 w-full">
             <Field form={form} name={"name"} label={"Name"} />
             <Field form={form} name={"email"} label={"Email"} />
             <Field form={form} data={sex} name={"sex"} label={"Sex"} />
-            {/* Phone Number Field */}
             <FormField
               control={form.control}
               name="phoneNumber"
@@ -209,7 +209,6 @@ const PatientFields = ({
                 </FormItem>
               )}
             />
-            {/* Date of Birth Field */}
             <FormField
               control={form.control}
               name="dob"
@@ -219,7 +218,7 @@ const PatientFields = ({
                   <FormControl>
                     <Input
                       min="1899-01-01"
-                      max={new Date().toISOString().split("T")[0]} // Set max date to today
+                      max={new Date().toISOString().split("T")[0]}
                       type="date"
                       value={
                         field.value instanceof Date
@@ -247,7 +246,7 @@ const PatientFields = ({
                     <Maps
                       field={field}
                       onNearestBranchChange={handleNearestBranchChange}
-                      onTravelDataChange={handleTravelDataChange} // Pass the handler for travel data change
+                      onTravelDataChange={handleTravelDataChange}
                       selectedBranch={selectedBranch}
                       branches={annotatedBranches}
                     />
@@ -258,7 +257,7 @@ const PatientFields = ({
             />
           </div>
         )}
-        {/* Step 2: Branch Selection */}
+
         {currentStep === 1 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {annotatedBranches.map((branch, index) => (
@@ -275,20 +274,17 @@ const PatientFields = ({
                       : ""
                   )}
                 >
-                  {/* Background image with brightness filter and hover effect */}
                   <div
                     className={cn(
                       "absolute inset-0 bg-cover bg-center transition-all duration-300",
                       selectedBranchId === branch.id
-                        ? "brightness-[1.75]" // Much higher brightness for selected branch
+                        ? "brightness-[1.75]"
                         : "group-hover/card:brightness-100 brightness-75"
                     )}
                     style={{
                       backgroundImage: `linear-gradient(to bottom right, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0)), url(${branchImages[index % branchImages.length]})`,
                     }}
                   />
-
-                  {/* Dark overlay with hover effect */}
                   <div className="absolute inset-0 bg-black opacity-20 transition-all duration-300 group-hover/card:opacity-20"></div>
 
                   <div className="relative z-10 flex flex-row items-center space-x-4">
@@ -323,11 +319,9 @@ const PatientFields = ({
             ))}
           </div>
         )}
-        {/* Step 3: Service Selection */}
+
         {currentStep === 2 && (
           <div className="grid grid-cols-1 gap-4">
-            {" "}
-            {/* Single column grid */}
             {services?.map((service, index) => (
               <div
                 key={service.id}
@@ -336,13 +330,12 @@ const PatientFields = ({
               >
                 <div
                   className={cn(
-                    "flex justify-between p-2 rounded-lg border cursor-pointer", // Reduced height (h-32)
+                    "flex justify-between p-2 rounded-lg border cursor-pointer",
                     form.watch("services") === service.id
-                      ? "ring-2 ring-yellow-500" // Highlight selected service with a border
+                      ? "ring-2 ring-yellow-500"
                       : ""
                   )}
                 >
-                  {/* Service Name and Description */}
                   <div className="">
                     <h1 className="font-bold text-xl text-gray-900">
                       {service.name}
@@ -357,7 +350,6 @@ const PatientFields = ({
           </div>
         )}
 
-        {/* Step 4: Date & Time Selection */}
         {currentStep === 3 && (
           <div className="flex">
             <FormField
@@ -368,7 +360,7 @@ const PatientFields = ({
                   <FormLabel>Date</FormLabel>
                   <Calendar
                     mode="single"
-                    selected={field.value}
+                    selected={field.value || new Date()} // Set the default to today's date
                     onSelect={(date) => {
                       field.onChange(date);
                       form.setValue("time", 0); // Reset the time field when the date changes
@@ -382,6 +374,7 @@ const PatientFields = ({
 
                       return date < today || date > maxDate;
                     }}
+                    defaultMonth={new Date()} // Ensure the calendar opens on the current month
                   />
                   <FormMessage />
                 </FormItem>
