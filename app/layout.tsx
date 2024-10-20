@@ -26,7 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={GeistSans.className} suppressHydrationWarning>
+    <html
+      lang="en"
+      className="{GeistSans.className} !scroll-smooth"
+      suppressHydrationWarning
+    >
       <body className="bg-background text-foreground">
         {/* <ThemeProvider
           attribute="class"
@@ -56,12 +60,11 @@ export default function RootLayout({
                   </li>
                   <li className="text-muted-foreground">
                     <small className="text-sm font-light leading-none">
-                    <Link href="#services">Services</Link>
+                      <Link href="#services">Services</Link>
                     </small>
                   </li>
                   <li className="text-muted-foreground">
                     <small className="text-sm font-light leading-none">
-                      
                       <Link href="#feedback">Feedbacks</Link>
                     </small>
                   </li>
