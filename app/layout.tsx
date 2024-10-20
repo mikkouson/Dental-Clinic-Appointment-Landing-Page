@@ -55,27 +55,27 @@ export default function RootLayout({
                 <ul className="flex gap-4">
                   <li className="font-medium">
                     <small className="text-sm  leading-none ">
-                      <Link href="#home">Home</Link>
+                      <Link href="/">Home</Link>
                     </small>
                   </li>
                   <li className="text-muted-foreground">
                     <small className="text-sm font-light leading-none">
-                      <Link href="#services">Services</Link>
+                      <Link href="/#services">Services</Link>
                     </small>
                   </li>
                   <li className="text-muted-foreground">
                     <small className="text-sm font-light leading-none">
-                      <Link href="#feedback">Feedbacks</Link>
+                      <Link href="/#feedback">Feedbacks</Link>
                     </small>
                   </li>
                   <li className="text-muted-foreground">
                     <small className="text-sm font-light leading-none">
-                      <Link href="/">Appointment</Link>
+                      <Link href="/appointment">Appointment</Link>
                     </small>
                   </li>
                   <li className="text-muted-foreground">
                     <small className="text-sm font-light leading-none">
-                      <Link href="#faq">FAQs</Link>
+                      <Link href="/#faq">FAQs</Link>
                     </small>
                   </li>
                 </ul>
