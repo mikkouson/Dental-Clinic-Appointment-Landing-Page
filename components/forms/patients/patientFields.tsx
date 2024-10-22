@@ -19,6 +19,8 @@ import { Calendar } from "@/components/ui/calendar";
 import TimeSlot from "@/components/buttons/selectTime";
 import { Stepper, Step } from "react-form-stepper";
 import { cn } from "@/lib/utils";
+import DatePicker from "./dateField";
+import TimePicker from "./timeField";
 
 interface Address {
   id: number;
@@ -51,6 +53,8 @@ interface PatientFieldsProps {
 
 const fetcher = (url: string): Promise<Branch[]> =>
   fetch(url).then((res) => res.json());
+
+// Reusable TimePicker Component
 
 const PatientFields = ({
   form,
@@ -352,51 +356,14 @@ const PatientFields = ({
 
         {currentStep === 3 && (
           <div className="flex">
-            <FormField
-              name="date"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date</FormLabel>
-                  <Calendar
-                    mode="single"
-                    selected={field.value || new Date()} // Set the default to today's date
-                    onSelect={(date) => {
-                      field.onChange(date);
-                      form.setValue("time", 0); // Reset the time field when the date changes
-                    }}
-                    className="rounded-md border shadow"
-                    disabled={(date) => {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      const maxDate = new Date(today);
-                      maxDate.setDate(today.getDate() + 29);
-
-                      return date < today || date > maxDate;
-                    }}
-                    defaultMonth={new Date()} // Ensure the calendar opens on the current month
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            <DatePicker form={form} name="date" />
             <div className="w-full ml-8">
-              {selectedBranchs && (
-                <FormField
-                  control={form.control}
+              {selectedBranchId && (
+                <TimePicker
+                  form={form}
                   name="time"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Time</FormLabel>
-                      <TimeSlot
-                        branch={selectedBranchs.toString()}
-                        field={field}
-                        date={selectedDate}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  branch={selectedBranchId.toString()}
+                  date={form.watch("date")}
                 />
               )}
             </div>
