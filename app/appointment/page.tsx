@@ -51,6 +51,7 @@ export default function Page() {
         title: "Error",
         description: result.message,
         variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -60,6 +61,7 @@ export default function Page() {
       title: "Success",
       description: "Appointment created successfully!",
       variant: "success",
+      duration: 2000,
     });
 
     // Reset the form if needed
