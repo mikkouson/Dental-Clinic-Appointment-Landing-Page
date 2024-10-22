@@ -1,6 +1,11 @@
 "use server";
 
-import { PatientFormValues, PatientSchema } from "@/app/types";
+import {
+  PatientFormValues,
+  PatientSchema,
+  RescheduleFormValues,
+  ReScheduleSchema,
+} from "@/app/types";
 import DentalAppointmentPendingEmail from "@/components/emailTemplates/pendingAppointment";
 import { createClient } from "@/utils/supabase/server";
 import moment from "moment";
@@ -286,4 +291,79 @@ export async function pendingAppointment({ aptId }: AppointmentActionProps) {
 
   // Redirect after all the async operations are complete
   redirect("/appointment");
+}
+
+export async function rescheduleAppointment(data: RescheduleFormValues) {
+  const result = ReScheduleSchema.safeParse(data);
+  if (!result.success) {
+    console.log("Validation errors:", result.error.format());
+    return;
+  }
+  if (data.id === undefined) {
+    console.error("Appointment ID is missing or undefined.");
+    return;
+  }
+
+  const supabase = createClient();
+
+  const formattedDate = moment
+    .utc(data.date)
+    .add(8, "hours")
+    .format("MM-DD-YYYY");
+
+  const { error } = await supabase
+    .from("appointments")
+    .update({
+      date: formattedDate,
+      time: data.time,
+      status: 6,
+    })
+    .eq("id", data.id);
+
+  if (error) {
+    console.error("Error updating appointment:", error.message);
+    return;
+  }
+
+  // Revalidate the path and redirect
+  revalidatePath("/");
+  redirect("/appointment/view");
+}
+
+export async function cancelAppointment({ aptId }: AppointmentActionProps) {
+  const supabase = createClient();
+
+  // Combine status and appointment_ticket updates in one query
+  const { data: appointmentData, error: updateError } = await supabase
+    .from("appointments")
+    .update({
+      status: 3,
+    })
+    .eq("id", aptId)
+    .select(
+      `
+        *,
+        patients (
+          *
+        )
+      `
+    )
+    .single();
+
+  if (updateError) {
+    throw new Error(`Error updating appointment: ${updateError.message}`);
+  }
+}
+
+export async function signOut() {
+  const supabase = createClient();
+
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    redirect("/error");
+  } else {
+    revalidatePath("/", "layout");
+    redirect("/appointment/login");
+  }
 }

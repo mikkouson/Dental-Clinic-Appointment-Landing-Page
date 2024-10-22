@@ -46,3 +46,14 @@ export const PatientSchema = z.object({
   }),
 });
 export type PatientFormValues = z.infer<typeof PatientSchema>;
+
+export const ReScheduleSchema = z.object({
+  id: z.number().optional(),
+  date: z.date({
+    required_error: "A date of birth is required.",
+  }),
+  time: z.number({
+    required_error: "A date of birth is required.",
+  }),
+});
+export type RescheduleFormValues = z.infer<typeof ReScheduleSchema>;
