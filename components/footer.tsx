@@ -12,7 +12,7 @@ import {
 
 export default function Footer() {
   return (
-    <footer className="bg-muted text-gray-800 mb-4 pt-12 border-t border-gray-200">
+    <footer className="bg-muted text-gray-800  pt-12 border-t border-gray-200">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 px-6 md:px-0">
         {/* About Us */}
         <div>

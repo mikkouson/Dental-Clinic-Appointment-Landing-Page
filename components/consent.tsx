@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
+import Link from "next/link";
 
 interface ConsentProps {
   setShowPatientFields: (value: boolean) => void;
@@ -12,11 +13,6 @@ export default function Consent({ setShowPatientFields }: ConsentProps) {
     if (consent) {
       setShowPatientFields(true); // Show patient fields
     }
-  };
-
-  const handleManageAppointment = () => {
-    // Add your logic to manage appointments
-    alert("Redirecting to manage appointments...");
   };
 
   return (
@@ -108,12 +104,11 @@ export default function Consent({ setShowPatientFields }: ConsentProps) {
               </div>
             </div>
             {/* Manage Appointment Button */}
-            <Button
-              onClick={handleManageAppointment}
-              className="w-full px-4 py-2 rounded font-semibold transition duration-200"
-            >
-              Manage Appointment
-            </Button>
+            <Link href={"/appointment/login"}>
+              <Button className="w-full px-4 py-2 rounded font-semibold transition duration-200">
+                Manage Appointment
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
