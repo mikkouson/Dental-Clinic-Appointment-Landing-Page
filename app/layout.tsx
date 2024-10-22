@@ -10,6 +10,7 @@ import "./globals.css";
 import Image from "next/image";
 import Footer from "@/components/footer";
 import { Toaster } from "@/components/ui/toaster";
+
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : "http://localhost:3000";
@@ -38,10 +39,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         > */}
-        <main className="flex flex-col ">
-          <div className="flex-1 w-full flex flex-col  items-center ">
+        <main className="flex flex-col min-h-screen">
+          <div className="flex-1 w-full flex flex-col items-center">
             <nav className="w-full h-16 flex justify-center">
-              <div className="w-full max-w-7xl flex justify-between items-center p-4 px-6 ">
+              <div className="w-full max-w-7xl flex justify-between items-center p-4 px-6">
                 <div className="flex">
                   <Image
                     alt="Doctor"
@@ -50,11 +51,11 @@ export default function RootLayout({
                     height={40}
                     className="rounded-full mr-1"
                   />
-                  <h3 className="text-lg font-semibold   ">Lobodent</h3>
+                  <h3 className="text-lg font-semibold">Lobodent</h3>
                 </div>
                 <ul className="flex gap-4">
                   <li className="font-medium">
-                    <small className="text-sm  leading-none ">
+                    <small className="text-sm leading-none">
                       <Link href="/">Home</Link>
                     </small>
                   </li>
@@ -82,27 +83,12 @@ export default function RootLayout({
               </div>
             </nav>
 
-            <div className="flex w-full  max-w-7xl">{children}</div>
+            <div className="flex w-full max-w-7xl">{children}</div>
             <Toaster />
-
-            {/* <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-              <p>
-                Powered by{" "}
-                <a
-                  href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-                  target="_blank"
-                  className="font-bold hover:underline"
-                  rel="noreferrer"
-                >
-                  Supabase
-                </a>
-              </p>
-              <ThemeSwitcher />
-            </footer> */}
           </div>
+          <Footer />
         </main>
         {/* </ThemeProvider> */}
-        <Footer />
       </body>
     </html>
   );
