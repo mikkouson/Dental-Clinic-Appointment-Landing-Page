@@ -39,7 +39,7 @@ export default function TimeSlot({ branch, field, date }: TimeSlotProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4">
+    <div className="grid grid-cols-1 gap-1">
       {data.map((slot: { id: number; time: string; appointments: any[] }) => {
         const patientCount = slot.appointments.length;
         const slotsUsed = Math.min(3, patientCount); // Limit slots used to a maximum of 3
