@@ -27,21 +27,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className="{GeistSans.className} !scroll-smooth"
-      suppressHydrationWarning
-    >
+    <html lang="en" suppressHydrationWarning>
       <body className="bg-background text-foreground">
-        {/* <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        > */}
         <main className="flex flex-col min-h-screen">
           <div className="flex-1 w-full flex flex-col items-center">
-            <nav className="w-full h-16 flex justify-center">
+          <nav className="w-full h-16 sticky top-0 z-50 bg-white shadow-md flex justify-center">
               <div className="w-full max-w-7xl flex justify-between items-center p-4 px-6">
                 <div className="flex">
                   <Image
@@ -53,33 +43,37 @@ export default function RootLayout({
                   />
                   <h3 className="text-lg font-semibold">Lobodent</h3>
                 </div>
-                <ul className="flex gap-4">
-                  <li className="font-medium">
-                    <small className="text-sm leading-none">
-                      <Link href="/">Home</Link>
-                    </small>
-                  </li>
-                  <li className="text-muted-foreground">
-                    <small className="text-sm font-light leading-none">
-                      <Link href="/#services">Services</Link>
-                    </small>
-                  </li>
-                  <li className="text-muted-foreground">
-                    <small className="text-sm font-light leading-none">
-                      <Link href="/#feedback">Feedbacks</Link>
-                    </small>
-                  </li>
-                  <li className="text-muted-foreground">
-                    <small className="text-sm font-light leading-none">
-                      <Link href="/appointment">Appointment</Link>
-                    </small>
-                  </li>
-                  <li className="text-muted-foreground">
-                    <small className="text-sm font-light leading-none">
-                      <Link href="/#faq">FAQs</Link>
-                    </small>
-                  </li>
-                </ul>
+
+                {/* Menu for larger screens */}
+                <div className="hidden md:flex gap-4">
+                  <Link href="/">Home</Link>
+                  <Link href="/#services">Services</Link>
+                  <Link href="/#feedback">Feedbacks</Link>
+                  <Link href="/appointment">Appointment</Link>
+                  <Link href="/#faq">FAQs</Link>
+                </div>
+
+                {/* Burger icon for small screens (checkbox input) */}
+                <div className="md:hidden relative">
+                  <input type="checkbox" id="menu-toggle" className="peer hidden" />
+                  <label
+                    htmlFor="menu-toggle"
+                    className="block cursor-pointer text-2xl"
+                  >
+                    ☰
+                  </label>
+
+                  {/* Mobile Menu */}
+                  <div
+                    className="absolute right-0 top-full mt-2 hidden peer-checked:flex flex-col bg-slate-50 p-8 justify-center items-start gap-2"
+                  >
+                    <Link href="/">Home</Link>
+                    <Link href="/#services">Services</Link>
+                    <Link href="/#feedback">Feedbacks</Link>
+                    <Link href="/appointment">Appointment</Link>
+                    <Link href="/#faq">FAQs</Link>
+                  </div>
+                </div>
               </div>
             </nav>
 
@@ -88,7 +82,6 @@ export default function RootLayout({
           </div>
           <Footer />
         </main>
-        {/* </ThemeProvider> */}
       </body>
     </html>
   );

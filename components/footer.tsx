@@ -30,7 +30,7 @@ export default function Footer() {
           <ul>
             <li className="mb-2">
               <Link
-                href="/about"
+                href="/"
                 className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
               >
                 About Us
@@ -38,7 +38,7 @@ export default function Footer() {
             </li>
             <li className="mb-2">
               <Link
-                href="/services"
+                href="/#services"
                 className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
               >
                 Our Services
@@ -46,15 +46,15 @@ export default function Footer() {
             </li>
             <li className="mb-2">
               <Link
-                href="/contact"
+                href="/#feedback"
                 className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
               >
-                Contact Us
+                Feedbacks
               </Link>
             </li>
             <li className="mb-2">
               <Link
-                href="/appointments"
+                href="/appointment"
                 className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
               >
                 Book Appointment
@@ -88,7 +88,7 @@ export default function Footer() {
                 href="mailto:info@lobodent.com"
                 className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200"
               >
-                info@lobodent.com
+                Erica1997lobo@gmail.com
               </Link>
             </li>
           </ul>
@@ -96,25 +96,11 @@ export default function Footer() {
           {/* Social Media */}
           <div className="flex mt-4 space-x-4">
             <Link
-              href="https://facebook.com"
+              href="https://www.facebook.com/Lobodental1127"
               target="_blank"
               rel="noopener noreferrer"
             >
               <Facebook className="w-5 h-5 text-gray-600 hover:text-gray-800 transition-colors duration-200" />
-            </Link>
-            <Link
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Instagram className="w-5 h-5 text-gray-600 hover:text-gray-800 transition-colors duration-200" />
-            </Link>
-            <Link
-              href="https://twitter.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Twitter className="w-5 h-5 text-gray-600 hover:text-gray-800 transition-colors duration-200" />
             </Link>
           </div>
         </div>
