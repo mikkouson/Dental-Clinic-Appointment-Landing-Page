@@ -42,31 +42,30 @@ export default function Page() {
   };
 
   async function onSubmit(data: PatientFormValues) {
-    // Call the server function and await its response
-    const result = await newAppointment(data);
+    try {
+      // Call the server function and await its response
+      const result = await newAppointment(data);
 
-    if (!result.success) {
-      // Display an error toast with the message
+      // If appointment creation is successful, display a success toast
+      toast({
+        title: "Success",
+        description: "Appointment created successfully!",
+        variant: "success",
+        duration: 2000,
+      });
+
+      // Reset the form if needed
+      // form.reset();
+      // setShowPatientFields(false); // Hide fields after submission
+    } catch (error) {
+      // Handle error case if the newAppointment call fails
       toast({
         title: "Error",
-        description: result.message,
+        description: "Failed to create appointment. Please try again later.",
         variant: "destructive",
         duration: 2000,
       });
-      return;
     }
-
-    // If appointment creation is successful, display a success toast
-    toast({
-      title: "Success",
-      description: "Appointment created successfully!",
-      variant: "success",
-      duration: 2000,
-    });
-
-    // Reset the form if needed
-    // form.reset();
-    // setShowPatientFields(false); // Hide fields after submission
   }
 
   return (
