@@ -31,16 +31,22 @@ export default function TimeSlot({ branch, field, date }: TimeSlotProps) {
       </div>
     );
 
+  const isToday = moment(date).isSame(new Date(), "day");
+  const currentTime = moment();
+
   const handleSelect = (id: number) => {
     field.onChange(id); // Update the form's "time" field with the selected time slot's ID
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4">
+    <div className="grid grid-cols-1 gap-1">
       {data.map((slot: { id: number; time: string; appointments: any[] }) => {
         const patientCount = slot.appointments.length;
         const slotsUsed = Math.min(3, patientCount); // Limit slots used to a maximum of 3
         const remainingSlots = 3 - slotsUsed; // Calculate remaining available slots
+        const slotTime = moment(slot.time, "h:mm A"); // Assuming slot time is in the format "hh:mm AM/PM"
+
+        const isPastTime = isToday && slotTime.isBefore(currentTime); // Check if the time slot is in the past for today
 
         return (
           <div
@@ -50,13 +56,18 @@ export default function TimeSlot({ branch, field, date }: TimeSlotProps) {
               field.value === slot.id
                 ? "bg-blue-100 border-blue-500"
                 : "bg-white border-gray-300",
-              remainingSlots === 0 ? "opacity-50 cursor-not-allowed" : ""
+              remainingSlots === 0 || isPastTime
+                ? "opacity-50 cursor-not-allowed"
+                : ""
             )}
-            onClick={() => remainingSlots > 0 && handleSelect(slot.id)} // Only allow clicking if there are available slots
+            onClick={() =>
+              remainingSlots > 0 && !isPastTime && handleSelect(slot.id)
+            } // Only allow clicking if there are available slots and it's not in the past
           >
             <span>{slot.time}</span>
             <span>
               {slotsUsed} / 3 Slots Taken {remainingSlots === 0 && "(Full)"}
+              {isPastTime && " (Past)"}
             </span>
           </div>
         );
