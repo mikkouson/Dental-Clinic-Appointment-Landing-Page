@@ -1,18 +1,11 @@
-import DeployButton from "@/components/deploy-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
-import HeaderAuth from "@/components/header-auth";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { hasEnvVars } from "@/utils/supabase/check-env-vars";
-import { GeistSans } from "geist/font/sans";
-import { ThemeProvider } from "next-themes";
-import Link from "next/link";
-import "./globals.css";
-import Image from "next/image";
 import Footer from "@/components/footer";
 import { Toaster } from "@/components/ui/toaster";
+import Image from "next/image";
+import Link from "next/link";
+import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
+  ? `https://www.lobodentdentalclinic.online/`
   : "http://localhost:3000";
 
 export const metadata = {
