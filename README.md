@@ -6,7 +6,11 @@
 
 </head>
 <body>
+  <a href="https://demo-nextjs-with-supabase.vercel.app/">
+  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
   <h1>Lobodent Dental Clinic Online Appointment</h1>
+</a>
+
   <p>The <strong>Lobodent Dental Clinic Online Appointment System</strong> is a web application that enables patients to book, reschedule, and manage their dental appointments online. It streamlines the clinic's scheduling process, improves patient experience, and reduces administrative overhead.</p>
 
   <h2>Features</h2>
