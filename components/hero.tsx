@@ -13,9 +13,11 @@ export default function Header() {
         From routine checkups to advanced cosmetic treatments, our dedicated team of professionals is here to give you the healthy, radiant smile you deserve. 
         Step into our clinic and experience personalized care tailored to your comfort and needs, all in a welcoming and modern environment.
         </p>
+        <a href="/appointment">
         <button className="bg-[#f1d04d] text-white px-6 py-3 rounded-md shadow hover:bg-[#e6c200] transition">
-          Get Services
-        </button>
+          Book Now
+        </button>  
+        </a>                      
       </div>
 
       <div className="relative w-full md:w-1/2 mt-10 md:mt-0 flex justify-center">
@@ -24,7 +26,7 @@ export default function Header() {
 
         {/* Doctor Image */}
         <div className="relative z-10 hidden md:block">
-          <Image
+          <Image 
             alt="Doctor"
             src="/images/header-bg.png"
             width={400}
