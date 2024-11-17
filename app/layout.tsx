@@ -12,7 +12,7 @@ export const metadata = {
   metadataBase: new URL(defaultUrl),
   title: "Lobodent Dental Clinic",
   description:
-    "Lobodent Dental Clinic offers expert dental care including Odontectomy procedures for teeth no. 28 & 38. Walk-ins are accepted, but appointments are prioritized. Contact us for inquiries and appointments at 0912 032 2767. We have two convenient locations: Lipa City and Tanauan City, Batangas. Open Monday to Sunday, with Wednesday closure. Parking is available for your convenience. We look forward to welcoming you to our clinic for a brighter smile!",
+    "Lobodent Dental Clinic provides expert dental care, including Odontectomy. Visit us in Lipa or Tanauan City, Batangas. Open Mon-Sun (closed Wed), 10 AM - 5 PM. Contact us today!",
 };
 
 export default function RootLayout({
