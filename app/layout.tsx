@@ -17,8 +17,9 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: "Lobodent Dental Clinic",
+  description:
+    "Lobodent Dental Clinic offers expert dental care including Odontectomy procedures for teeth no. 28 & 38. Walk-ins are accepted, but appointments are prioritized. Contact us for inquiries and appointments at 0912 032 2767. We have two convenient locations: Lipa City and Tanauan City, Batangas. Open Monday to Sunday, with Wednesday closure. Parking is available for your convenience. We look forward to welcoming you to our clinic for a brighter smile!",
 };
 
 export default function RootLayout({
@@ -31,7 +32,7 @@ export default function RootLayout({
       <body className="bg-background text-foreground">
         <main className="flex flex-col min-h-screen">
           <div className="flex-1 w-full flex flex-col items-center">
-          <nav className="w-full h-16 sticky top-0 z-50 bg-white shadow-md flex justify-center">
+            <nav className="w-full h-16 sticky top-0 z-50 bg-white shadow-md flex justify-center">
               <div className="w-full max-w-7xl flex justify-between items-center p-4 px-6">
                 <div className="flex">
                   <Image
@@ -55,7 +56,11 @@ export default function RootLayout({
 
                 {/* Burger icon for small screens (checkbox input) */}
                 <div className="md:hidden relative">
-                  <input type="checkbox" id="menu-toggle" className="peer hidden" />
+                  <input
+                    type="checkbox"
+                    id="menu-toggle"
+                    className="peer hidden"
+                  />
                   <label
                     htmlFor="menu-toggle"
                     className="block cursor-pointer text-2xl"
@@ -64,9 +69,7 @@ export default function RootLayout({
                   </label>
 
                   {/* Mobile Menu */}
-                  <div
-                    className="absolute right-0 top-full mt-2 hidden peer-checked:flex flex-col bg-slate-50 p-8 justify-center items-start gap-2"
-                  >
+                  <div className="absolute right-0 top-full mt-2 hidden peer-checked:flex flex-col bg-slate-50 p-8 justify-center items-start gap-2">
                     <Link href="/">Home</Link>
                     <Link href="/#services">Services</Link>
                     <Link href="/#feedback">Feedbacks</Link>
