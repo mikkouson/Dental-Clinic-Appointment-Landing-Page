@@ -100,6 +100,5 @@ yarn dev</pre>
     <li>Submit a pull request with detailed information about your changes.</li>
   </ul>
 
-
 </body>
 </html>
