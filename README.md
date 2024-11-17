@@ -1,98 +1,104 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+</head>
+<body>
+  <h1>Lobodent Dental Clinic Online Appointment</h1>
+  <p>The <strong>Lobodent Dental Clinic Online Appointment System</strong> is a web application that enables patients to book, reschedule, and manage their dental appointments online. It streamlines the clinic's scheduling process, improves patient experience, and reduces administrative overhead.</p>
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+  <h2>Features</h2>
+  <ul>
+    <li><strong>Patient Portal</strong>
+      <ul>
+        <li>Book new appointments by selecting available dates and time slots.</li>
+        <li>View and manage existing appointments.</li>
+        <li>Receive appointment confirmation and reminders.</li>
+      </ul>
+    </li>
+    <li><strong>Admin Dashboard</strong>
+      <ul>
+        <li>View all appointments by date and status.</li>
+        <li>Manage clinic schedules and available time slots.</li>
+        <li>Reschedule or cancel appointments.</li>
+      </ul>
+    </li>
+    <li><strong>Real-time Updates</strong>
+      <ul>
+        <li>Automatic synchronization of appointment data.</li>
+        <li>Live availability of time slots.</li>
+      </ul>
+    </li>
+   
+  </ul>
 
-## Features
+  <h2>Tech Stack</h2>
+  <ul>
+    <li><strong>Frontend:</strong> Next.js, TypeScript, Zustand (state management)</li>
+    <li><strong>Backend:</strong> Supabase (Database and API)</li>
+    <li><strong>Libraries:</strong>
+      <ul>
+        <li>SWR for client-side data fetching</li>
+        <li>Moment.js for date formatting</li>
+        <li>Shadcn components for UI (Radix UI, React Hook Form)</li>
+      </ul>
+    </li>
+  </ul>
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Middleware
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+  <h2>Installation</h2>
+  <h3>Prerequisites</h3>
+  <ul>
+    <li>Node.js (>= 16.x)</li>
+    <li>npm or yarn</li>
+    <li>Supabase account</li>
+  </ul>
 
-## Demo
+  <h3>Steps</h3>
+  <ol>
+    <li>Clone the repository:
+      <pre>git clone https://github.com/mikkouson/Dental-Clinic-Appointment-Landing-Page.git</pre>
+    </li>
+    <li>Install dependencies:
+      <pre>npm install
+# or
+yarn install</pre>
+    </li>
+    <li>Set up environment variables:
+      <pre>Create a .env.local file with the following:
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key</pre>
+    </li>
+    <li>Run the application:
+      <pre>npm run dev
+# or
+yarn dev</pre>
+    </li>
+    <li>Access the application at <a href="http://localhost:3000" target="_blank">http://localhost:3000</a>.</li>
+  </ol>
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+  <h2>Usage</h2>
+  <h3>Patient Portal</h3>
+  <ol>
+    <li>Select a date from the calendar.</li>
+    <li>Choose an available time slot for the desired service.</li>
+    <li>Enter patient details and confirm the appointment.</li>
+  </ol>
 
-## Deploy to Vercel
+  <h3>Admin Dashboard</h3>
+  <ol>
+    <li>Log in to access the dashboard.</li>
+    <li>View appointments for a selected date.</li>
+    <li>Reschedule, cancel, or modify appointment details as needed.</li>
+  </ol>
 
-Vercel deployment will guide you through creating a Supabase account and project.
+  <h2>Contributing</h2>
+  <p>Contributions are welcome!</p>
+  <ul>
+    <li>Fork the repository and create a feature branch.</li>
+    <li>Submit a pull request with detailed information about your changes.</li>
+  </ul>
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
-
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
-
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
-
-## Clone and run locally
-
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
-
-2. Create a Next.js app using the Supabase Starter template npx command
-
-   ```bash
-   npx create-next-app -e with-supabase
-   ```
-
-3. Use `cd` to change into the app's directory
-
-   ```bash
-   cd name-of-new-app
-   ```
-
-4. Rename `.env.example` to `.env.local` and update the following:
-
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
-   ```
-
-   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://app.supabase.com/project/_/settings/api)
-
-5. You can now run the Next.js local development server:
-
-   ```bash
-   npm run dev
-   ```
-
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
-
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
-
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
-
-## Feedback and issues
-
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
-
-## More Supabase examples
-
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
-# Dental-Clinic-Landing-Page
-# Dental-Clinic-Appointment-Landing-Page
+</body>
+</html>
