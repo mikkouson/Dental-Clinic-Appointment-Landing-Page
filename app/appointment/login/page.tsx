@@ -12,7 +12,7 @@ import { createClient } from "@/utils/supabase/server";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
 import { login } from "./action";
 
-export default async function ViewAppointment({
+export default function ViewAppointment({
   searchParams,
 }: {
   searchParams: { message: string };

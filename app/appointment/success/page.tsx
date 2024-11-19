@@ -17,7 +17,7 @@ import {
 
 export default function AppointmentConfirmation() {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className=" bg-background flex items-center justify-center p-4">
       <Card className="w-full ">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 bg-primary rounded-full p-3 w-16 h-16 flex items-center justify-center">
@@ -39,6 +39,10 @@ export default function AppointmentConfirmation() {
               results.
             </p>
           </div>
+          <p className="text-sm text-center text-muted-foreground">
+            Check your email. Weve sent your appointment ticket, which will be
+            used as credentials to view appointment details.
+          </p>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <Button asChild className="w-full">
