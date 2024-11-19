@@ -25,9 +25,6 @@ import { Form } from "./ui/form";
 import DatePicker from "./forms/patients/dateField";
 import TimePicker from "./forms/patients/timeField";
 
-const fetcher = (url: string): Promise<any> =>
-  fetch(url).then((res) => res.json());
-
 export function EditAppointment({
   appointment,
   text,
@@ -40,12 +37,15 @@ export function EditAppointment({
   mutate: any;
 }) {
   const [open, setOpen] = useState(false);
-  // Fetch patient data
+  const [originalValues, setOriginalValues] = useState({
+    date: appointment.date ? new Date(appointment.date) : null,
+    time: appointment.time || 0,
+  });
 
   useEffect(() => {
     setTimeout(() => (document.body.style.pointerEvents = ""), 0);
   });
-  // Use z.infer to derive the type from ReScheduleSchema
+
   const form = useForm<z.infer<typeof ReScheduleSchema>>({
     resolver: zodResolver(ReScheduleSchema),
   });
@@ -57,13 +57,36 @@ export function EditAppointment({
     form.setValue("id", appointment.id);
     form.setValue("time", appointment?.time || 0);
   };
+
   const { isSubmitting } = form.formState;
+
+  // Watch for changes in date and time fields
+  const currentDate = form.watch("date");
+  const currentTime = form.watch("time");
+
+  // Function to check if values have changed
+  const hasChanges = (): boolean => {
+    const originalDate = originalValues.date;
+    const originalTime = originalValues.time;
+
+    // If either date is null, only compare the ones that exist
+    if (!originalDate || !currentDate) {
+      return originalDate !== currentDate;
+    }
+
+    // Compare dates (ignoring time component)
+    const datesAreEqual =
+      originalDate.toDateString() === currentDate.toDateString();
+    const timesAreEqual = originalTime === currentTime;
+
+    return !datesAreEqual || !timesAreEqual;
+  };
 
   async function onSubmit(formData: z.infer<typeof ReScheduleSchema>) {
     mutate();
 
     try {
-      await rescheduleAppointment(formData); // Make sure this function returns a promise
+      await rescheduleAppointment(formData);
 
       toast({
         className: cn(
@@ -74,9 +97,8 @@ export function EditAppointment({
         variant: "success",
         description: "Appointment rescheduled successfully!",
       });
-      setOpen(false); // Close the modal
+      setOpen(false);
     } catch (error: any) {
-      // Revert the optimistic update in case of an error
       toast({
         className: cn(
           "top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4"
@@ -95,7 +117,7 @@ export function EditAppointment({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" onClick={() => set()}>
+        <Button variant="outline" onClick={() => set()} size="sm">
           Reschedule
         </Button>
       </SheetTrigger>
@@ -117,10 +139,8 @@ export function EditAppointment({
         }}
       >
         <SheetHeader>
-          <SheetTitle>Edit profile</SheetTitle>
-          <SheetDescription>
-            Make changes to your profile here. Click save when youre done.
-          </SheetDescription>
+          <SheetTitle>Reschedule Appointment</SheetTitle>
+          <SheetDescription></SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="w-full p-2">
@@ -138,7 +158,7 @@ export function EditAppointment({
               </div>
             </div>
             <div className="mt-2 flex justify-end">
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting || !hasChanges()}>
                 {isSubmitting ? "Submitting..." : "Submit"}
               </Button>
             </div>

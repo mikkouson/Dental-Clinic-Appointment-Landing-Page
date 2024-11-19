@@ -314,8 +314,8 @@ export async function rescheduleAppointment(data: RescheduleFormValues) {
   const { error } = await supabase
     .from("appointments")
     .update({
-      date: formattedDate,
-      time: data.time,
+      rescheduled_date: formattedDate,
+      rescheduled_time: data.time,
       status: 6,
     })
     .eq("id", data.id);
