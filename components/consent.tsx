@@ -50,14 +50,15 @@ export default function Consent({ setShowPatientFields }: ConsentProps) {
               first-served basis.
             </p>
             <p className="mb-2">
-              Clients are responsible for providing accurate information.
-              Incorrect or incomplete data may lead to the cancellation of your
-              appointment.
+            We are committed to providing you with the best possible dental care in a 
+            comfortable and safe environment. To ensure that we can offer you 
+            the most efficient and personalized services, we kindly ask that you review 
+            and agree to our terms and conditions.
             </p>
             <p className="mb-2">
-              Please be aware that if you miss your appointment or cancel it
-              without notice, you may be subject to a rebooking fee.
+            Please take a moment to read through the information below before proceeding.
             </p>
+          
           </div>
 
           {/* Consent */}
@@ -70,16 +71,15 @@ export default function Consent({ setShowPatientFields }: ConsentProps) {
               className="w-4 h-4 mt-1 border-gray-300 rounded"
             />
             <label htmlFor="consent-checkbox" className="ml-2 text-sm">
-              By proceeding with this appointment, I agree to Lobodent Dental
+              By using our services, we assume you agree to Lobodent Dental
               Clinic's terms and conditions, including the collection and use of
-              my personal data for the purposes of providing dental services. My
-              consent effectively constitutes a waiver of any and all privacy
-              rights pertaining to the disclosure, collection, and use of my
-              personal information and data under the specific terms and
-              conditions of the DFA Online Passport Appointment System Website's
-              Privacy Policy, the Data Privacy Act of 2012 and its Implementing
-              Rules and Regulations, and other pertinent DFA rules, regulations,
-              and policies on the matter.
+               personal data for the purposes of providing dental services. Please 
+               be aware that any information provided will be stored securely and used 
+               solely for the purposes of treatment, appointment scheduling, and communication 
+               related to your dental care. We are committed to protecting your privacy and 
+              ensuring that your data is handled with the highest level of security.
+              By continuing to use our services, you acknowledge that you have read, understood, and agreed to these terms. 
+              If you have any questions or concerns, please do not hesitate to contact our clinic directly.
             </label>
           </div>
 

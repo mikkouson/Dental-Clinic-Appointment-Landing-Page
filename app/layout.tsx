@@ -73,7 +73,9 @@ export default function RootLayout({
               </div>
             </nav>
 
-            <div className="flex w-full max-w-7xl">{children}</div>
+            <div className="flex w-full max-w-7xl justify-center">
+              {children}
+            </div>
             <Toaster />
           </div>
           <Footer />

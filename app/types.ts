@@ -39,10 +39,10 @@ export const PatientSchema = z.object({
     required_error: "Please select an branch to display.",
   }),
   date: z.date({
-    required_error: "A date of birth is required.",
+    required_error: "Date is required.",
   }),
   time: z.number({
-    required_error: "A date of birth is required.",
+    required_error: "Time is required.",
   }),
 });
 export type PatientFormValues = z.infer<typeof PatientSchema>;
@@ -50,10 +50,10 @@ export type PatientFormValues = z.infer<typeof PatientSchema>;
 export const ReScheduleSchema = z.object({
   id: z.number().optional(),
   date: z.date({
-    required_error: "A date of birth is required.",
+    required_error: "Date is required.",
   }),
   time: z.number({
-    required_error: "A date of birth is required.",
+    required_error: "Time is required.",
   }),
 });
 export type RescheduleFormValues = z.infer<typeof ReScheduleSchema>;
