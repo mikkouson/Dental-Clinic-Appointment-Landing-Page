@@ -85,11 +85,7 @@ export async function newAppointment(data: PatientFormValues) {
 
   if (!result.success) {
     console.error("Validation errors:", result.error.format());
-    return {
-      success: false,
-      message: "Validation errors",
-      errors: result.error.format(),
-    };
+    throw new Error("Validation errors");
   }
 
   const supabase = createClient();
@@ -111,10 +107,7 @@ export async function newAppointment(data: PatientFormValues) {
     const errorMessage =
       existingPatientError.message || "Error fetching patient";
     console.error("Error fetching patient:", errorMessage);
-    return {
-      success: false,
-      message: errorMessage,
-    };
+    throw new Error(errorMessage); // Ensure error is thrown
   }
 
   let patientId: number;
@@ -127,10 +120,7 @@ export async function newAppointment(data: PatientFormValues) {
       patientId = await createNewPatient(data);
     } catch (error: any) {
       console.error("Error creating new patient:", error.message);
-      return {
-        success: false,
-        message: error.message || "Error creating new patient",
-      };
+      throw new Error(error.message || "Error creating new patient");
     }
   } else {
     // Filter patients by normalized name
@@ -147,20 +137,15 @@ export async function newAppointment(data: PatientFormValues) {
         patientId = await createNewPatient(data);
       } catch (error: any) {
         console.error("Error creating new patient:", error.message);
-        return {
-          success: false,
-          message: error.message || "Error creating new patient",
-        };
+        throw new Error(error.message || "Error creating new patient");
       }
     } else if (matchingPatients.length > 1) {
       console.error(
         "Multiple patients found with the same details. Consider refining the search."
       );
-      return {
-        success: false,
-        message:
-          "Multiple patients found with the same details. Consider refining the search.",
-      };
+      throw new Error(
+        "Multiple patients found with the same details. Consider refining the search."
+      );
     } else {
       patientId = matchingPatients[0].id;
       console.log(`Patient exists with ID: ${patientId}`);
@@ -181,18 +166,12 @@ export async function newAppointment(data: PatientFormValues) {
     const errorMessage =
       existingAppointmentsError.message || "Error fetching appointments";
     console.error("Error fetching appointments:", errorMessage);
-    return {
-      success: false,
-      message: errorMessage,
-    };
+    throw new Error(errorMessage); // Ensure error is thrown
   }
 
   if (existingAppointments && existingAppointments.length > 0) {
     console.error("Patient already has an appointment on this date.");
-    return {
-      success: false,
-      message: "Patient already has an appointment on this date.",
-    };
+    throw new Error("Patient already has an appointment on this date.");
   }
 
   console.log("Patient does not have an appointment on this date.");
@@ -214,11 +193,20 @@ export async function newAppointment(data: PatientFormValues) {
     .select("*")
     .single();
 
+  if (newAppointmentError) {
+    const errorMessage =
+      newAppointmentError.message || "Error creating the appointment";
+    console.error("Error creating appointment:", errorMessage);
+    throw new Error(errorMessage); // Ensure error is thrown
+  }
+
   console.log(
     `Appointment created successfully: ${JSON.stringify(newAppointment)}`
   );
 
   await pendingAppointment({ aptId: newAppointment.id });
+  revalidatePath("/appointment", "layout");
+  redirect("/appointment");
 
   return {
     success: true,

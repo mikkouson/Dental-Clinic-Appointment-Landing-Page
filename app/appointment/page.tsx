@@ -11,6 +11,7 @@ import useSWR from "swr";
 import { newAppointment } from "../actions";
 import Consent from "@/components/consent";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 const fetcher = (url: string): Promise<any> =>
   fetch(url).then((res) => res.json());
@@ -40,6 +41,7 @@ export default function Page() {
   const checkEmailExists = async (email: string): Promise<boolean> => {
     return patients.some((patient: PatientCol) => patient.email === email);
   };
+  const router = useRouter();
 
   async function onSubmit(data: PatientFormValues) {
     try {
@@ -54,14 +56,20 @@ export default function Page() {
         duration: 2000,
       });
 
+      // Redirect to /appointment page
+      router.push("/appointment/success");
+
       // Reset the form if needed
       // form.reset();
       // setShowPatientFields(false); // Hide fields after submission
-    } catch (error) {
+    } catch (error: any) {
       // Handle error case if the newAppointment call fails
+      console.error("Error during appointment creation:", error.message);
       toast({
         title: "Error",
-        description: "Failed to create appointment. Please try again later.",
+        description:
+          error.message ||
+          "Failed to create appointment. Please try again later.",
         variant: "destructive",
         duration: 2000,
       });

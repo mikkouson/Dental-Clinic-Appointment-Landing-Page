@@ -165,19 +165,18 @@ const PatientFields = ({
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full p-2">
         <Stepper
           activeStep={currentStep}
-          nonLinear={true}
           styleConfig={{
-            activeBgColor: "#FBBF24",
-            completedBgColor: "#FBBF24",
-            inactiveBgColor: "#E5E7EB",
+            activeBgColor: "#FBBF24", // Active step circle color (yellow)
+            completedBgColor: "#FBBF24", // Completed step circle color (yellow)
+            inactiveBgColor: "#E5E7EB", // Inactive step circle color
             labelFontSize: "1rem",
             circleFontSize: "1rem",
-            size: "2rem",
-            activeTextColor: "#000000",
-            completedTextColor: "#000000",
-            inactiveTextColor: "#6B7280",
-            borderRadius: "50%",
-            fontWeight: "bold",
+            size: "2rem", // Size of step circles
+            activeTextColor: "#000000", // Active text color
+            completedTextColor: "#000000", // Completed text color
+            inactiveTextColor: "#6B7280", // Inactive text color
+            borderRadius: "50%", // Border radius for step circles
+            fontWeight: "bold", // Font weight for labels
           }}
         >
           <Step label="Basic Info" />
@@ -225,7 +224,8 @@ const PatientFields = ({
                       max={new Date().toISOString().split("T")[0]}
                       type="date"
                       value={
-                        field.value instanceof Date
+                        field.value instanceof Date &&
+                        !isNaN(field.value.getTime())
                           ? field.value.toISOString().split("T")[0]
                           : ""
                       }
