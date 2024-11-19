@@ -17,7 +17,6 @@ import { RadioBtn } from "@/components/buttons/branchRadio";
 import Field from "../formField";
 import { Calendar } from "@/components/ui/calendar";
 import TimeSlot from "@/components/buttons/selectTime";
-import { Stepper, Step } from "react-form-stepper";
 import { cn } from "@/lib/utils";
 import DatePicker from "./dateField";
 import TimePicker from "./timeField";
@@ -54,7 +53,69 @@ interface PatientFieldsProps {
 const fetcher = (url: string): Promise<Branch[]> =>
   fetch(url).then((res) => res.json());
 
-// Reusable TimePicker Component
+// Custom Stepper Components
+const StepperDot = ({
+  number,
+  isActive,
+  isCompleted,
+}: {
+  number: number;
+  isActive: boolean;
+  isCompleted: boolean;
+}) => {
+  return (
+    <div className="flex flex-col items-center">
+      <div
+        className={cn(
+          "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-200",
+          isActive && "bg-yellow-400 text-black",
+          isCompleted && "bg-yellow-400 text-black",
+          !isActive && !isCompleted && "bg-gray-200 text-gray-600"
+        )}
+      >
+        {number}
+      </div>
+    </div>
+  );
+};
+
+const CustomStepper = ({ currentStep }: { currentStep: number }) => {
+  const steps = ["Basic Info", "Branch", "Service", "Date & Time"];
+
+  return (
+    <div className="w-full mb-8">
+      <div className="flex justify-between items-center relative">
+        <div className="absolute h-0.5 bg-gray-200 top-4 left-0 right-0 -z-10" />
+        <div
+          className="absolute h-0.5 bg-yellow-400 top-4 left-0 -z-10 transition-all duration-300"
+          style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
+        />
+
+        <div className="w-full flex justify-between">
+          {steps.map((label, index) => (
+            <div key={label} className="flex flex-col items-center space-y-2">
+              <StepperDot
+                number={index + 1}
+                isActive={currentStep === index}
+                isCompleted={currentStep > index}
+              />
+              <span
+                className={cn(
+                  "text-sm font-medium",
+                  currentStep === index && "text-black",
+                  currentStep > index && "text-black",
+                  currentStep < index && "text-gray-500"
+                )}
+              >
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const PatientFields = ({
   form,
@@ -62,7 +123,7 @@ const PatientFields = ({
   setShowPatientFields,
 }: PatientFieldsProps) => {
   useEffect(() => {
-    form.setValue("date", new Date()); // Set the default date to today
+    form.setValue("date", new Date());
   }, [form]);
 
   const {
@@ -91,10 +152,6 @@ const PatientFields = ({
 
   const selectedBranch =
     branches?.find((branch) => branch.id === selectedBranchId) || nearestBranch;
-
-  const handleSubmit = (data: PatientFormValues) => {
-    onSubmit(data);
-  };
 
   const handleNextStep = async () => {
     let validStep = false;
@@ -129,6 +186,7 @@ const PatientFields = ({
       form.reset();
     }
   };
+
   const handleNearestBranchChange = (branch: Branch | null) => {
     setNearestBranch(branch);
   };
@@ -137,59 +195,44 @@ const PatientFields = ({
     form.setValue("branch", branchId);
   };
 
-  if (isLoading) return <>Loading branches...</>;
+  const handleTravelDataChange = (
+    data: { branchId: number; duration: string; distance: string }[]
+  ) => {
+    setTravelData(data);
+  };
 
-  if (error) return <div>Error loading branches</div>;
+  if (isLoading)
+    return <div className="w-full text-center py-4">Loading branches...</div>;
+  if (error)
+    return (
+      <div className="w-full text-center py-4 text-red-500">
+        Error loading branches
+      </div>
+    );
 
   const annotatedBranches: Branch[] = branches!.map((branch) => ({
     ...branch,
     preferred: nearestBranch ? branch.id === nearestBranch.id : undefined,
   }));
 
-  const selectedBranchs = form.watch("branch");
-  const selectedDate = form.watch("date");
-  const handleTravelDataChange = (
-    data: { branchId: number; duration: string; distance: string }[]
-  ) => {
-    setTravelData(data);
-  };
   const branchImages = [
     "/images/branches/marawoy.png",
     "/images/branches/dagatan.png",
     "/images/branches/tanauan.png",
   ];
+
   const { isSubmitting } = form.formState;
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full p-2">
-        <Stepper
-          activeStep={currentStep}
-          styleConfig={{
-            activeBgColor: "#FBBF24", // Active step circle color (yellow)
-            completedBgColor: "#FBBF24", // Completed step circle color (yellow)
-            inactiveBgColor: "#E5E7EB", // Inactive step circle color
-            labelFontSize: "1rem",
-            circleFontSize: "1rem",
-            size: "2rem", // Size of step circles
-            activeTextColor: "#000000", // Active text color
-            completedTextColor: "#000000", // Completed text color
-            inactiveTextColor: "#6B7280", // Inactive text color
-            borderRadius: "50%", // Border radius for step circles
-            fontWeight: "bold", // Font weight for labels
-          }}
-        >
-          <Step label="Basic Info" />
-          <Step label="Branch" />
-          <Step label="Service" />
-          <Step label="Date & Time" />
-        </Stepper>
+        <CustomStepper currentStep={currentStep} />
 
         {currentStep === 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 w-full">
-            <Field form={form} name={"name"} label={"Name"} />
-            <Field form={form} name={"email"} label={"Email"} />
-            <Field form={form} data={sex} name={"sex"} label={"Sex"} />
+            <Field form={form} name="name" label="Name" />
+            <Field form={form} name="email" label="Email" />
+            <Field form={form} data={sex} name="sex" label="Sex" />
             <FormField
               control={form.control}
               name="phoneNumber"
@@ -203,7 +246,7 @@ const PatientFields = ({
                       </p>
                       <Input
                         type="number"
-                        className="w-full rounded-lg bg-background pl-16 "
+                        className="w-full rounded-lg bg-background pl-16"
                         {...field}
                       />
                     </div>
@@ -239,7 +282,6 @@ const PatientFields = ({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="address"
@@ -326,7 +368,7 @@ const PatientFields = ({
 
         {currentStep === 2 && (
           <div className="grid grid-cols-1 gap-4">
-            {services?.map((service, index) => (
+            {services?.map((service) => (
               <div
                 key={service.id}
                 className="w-full group/card"
@@ -340,7 +382,7 @@ const PatientFields = ({
                       : ""
                   )}
                 >
-                  <div className="">
+                  <div>
                     <h1 className="font-bold text-xl text-gray-900">
                       {service.name}
                     </h1>
@@ -369,18 +411,26 @@ const PatientFields = ({
             </div>
           </div>
         )}
+
         <div className="flex justify-between mt-4">
           <Button onClick={handlePreviousStep} type="button">
             Back
           </Button>
 
-          {currentStep < 3 && (
-            <Button onClick={handleNextStep} type="button">
+          {currentStep < 3 ? (
+            <Button
+              onClick={handleNextStep}
+              type="button"
+              className="bg-yellow-400 hover:bg-yellow-500 text-black"
+            >
               Next
             </Button>
-          )}
-          {currentStep === 3 && (
-            <Button type="submit" disabled={isSubmitting}>
+          ) : (
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-yellow-400 hover:bg-yellow-500 text-black"
+            >
               {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
           )}

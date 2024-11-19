@@ -101,6 +101,7 @@ export default function Footer() {
               rel="noopener noreferrer"
             >
               <Facebook className="w-5 h-5 text-gray-600 hover:text-gray-800 transition-colors duration-200" />
+              Lobodent Dental Clinic
             </Link>
           </div>
         </div>
