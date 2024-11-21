@@ -36,9 +36,8 @@ export default function Consent({ setShowPatientFields }: ConsentProps) {
           <div className="border-l-4 border-red-500 p-4 bg-gray-50 mb-6">
             <p className="text-red-600 font-bold mb-1">Reminder:</p>
             <p>
-              To ensure a smooth experience, kindly arrive 10 minutes before
-              your appointment and bring any relevant dental records or
-              insurance information.
+              To ensure a smooth experience, Please arrive 10 minutes before your scheduled appointment time and
+              kindly bring any relevant medical records, if applicable.
             </p>
           </div>
 
