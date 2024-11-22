@@ -6,11 +6,14 @@ type SkeletonProps = {
 export function BentoGridDemo() {
   return (
     <div className="max-w-7xl mx-auto">
-      <div id="services" className="flex justify-between gap-4 mb-8">
-        <h2 className="mt-10 scroll-m-20 pb-2 text-4xl font-semibold tracking-tight transition-colors first:mt-0 ">
+      <div
+        id="services"
+        className="flex-col flex justify-between gap-4 mb-8 sm:flex-row"
+      >
+        <h2 className="mt-10 scroll-m-20 pb-2 text-4xl font-semibold tracking-tight transition-colors first:mt-0 text-center ">
           Our Services
         </h2>
-        <p className="text-md text-muted-foreground w-1/2">
+        <p className="text-md text-muted-foreground w-1/2 hidden sm:block">
           Here at Lobodent, we offer a comprehensive range of dental care
           solutions designed to keep your smile healthy and bright. Explore our
           services and experience top-quality care tailored just for you.

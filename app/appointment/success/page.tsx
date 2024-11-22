@@ -34,20 +34,20 @@ export default function AppointmentConfirmation() {
           <div className="bg-muted p-4 rounded-md text-sm">
             <p className="font-semibold mb-2">Reminder:</p>
             <p>
-              Please arrive 15 minutes before your scheduled appointment time.
-              Don't forget to bring any relevant medical records or test
-              results.
+              Please arrive 10 minutes before your scheduled appointment time and
+              kindly bring any relevant medical records, if applicable.
+             
             </p>
           </div>
           <p className="text-sm text-center text-muted-foreground">
-            Check your email. Weve sent your appointment ticket, which will be
-            used as credentials to view appointment details.
+          Please check your email for your appointment ticket. 
+          This ticket serves as your login credential to access your appointment details.
           </p>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <Button asChild className="w-full">
             <Link href="/">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home Page
             </Link>
           </Button>
 

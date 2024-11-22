@@ -25,7 +25,7 @@ export default function ViewAppointment({
             <h1 className="text-3xl font-bold">View Your Appointment</h1>
             <p className="text-balance text-muted-foreground">
               Enter your appointment ticket number and email to view your
-              detailssadas
+              appointment details and history.
             </p>
           </div>
           <form>
