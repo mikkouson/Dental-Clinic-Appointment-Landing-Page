@@ -13,14 +13,15 @@ import { Quote } from "lucide-react";
 
 export function CarouselSize() {
   return (
-    <div id="feedback"className="w-full mt-16">
+    <div id="feedback" className="w-full mt-16 hidden md:block">
       <div className="flex justify-between gap-4 mb-">
         <h2 className="mt-10 scroll-m-20 pb-2 text-4xl font-semibold tracking-tight transition-colors first:mt-0 ">
           What do our patients say?
         </h2>
         <p className="text-md text-muted-foreground w-1/2">
-        Here at Lobodent, patient satisfaction is at the heart of everything we do. 
-        Hear from our patients about their experiences and how our team has helped them achieve healthy, confident smiles.
+          Here at Lobodent, patient satisfaction is at the heart of everything
+          we do. Hear from our patients about their experiences and how our team
+          has helped them achieve healthy, confident smiles.
         </p>
       </div>
       <Carousel
@@ -52,8 +53,6 @@ export function CarouselSize() {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
       </Carousel>
     </div>
   );

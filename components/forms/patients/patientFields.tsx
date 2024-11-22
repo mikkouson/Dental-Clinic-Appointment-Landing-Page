@@ -21,6 +21,7 @@ import { Stepper, Step } from "react-form-stepper";
 import { cn } from "@/lib/utils";
 import DatePicker from "./dateField";
 import TimePicker from "./timeField";
+import LoadingSkeleton from "@/components/skeleton";
 
 interface Address {
   id: number;
@@ -137,7 +138,7 @@ const PatientFields = ({
     form.setValue("branch", branchId);
   };
 
-  if (isLoading) return <>Loading branches...</>;
+  if (isLoading) return <LoadingSkeleton />;
 
   if (error) return <div>Error loading branches</div>;
 
