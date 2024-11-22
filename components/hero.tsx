@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function Header() {
   return (
-    <div className="w-full md:h-[calc(100vh-64px)] flex flex-col md:flex-row items-center justify-between p-4 px-6 text-center">
+    <div className="w-full md:h-[calc(100vh-64px)] flex flex-col md:flex-row items-center justify-between p-4 px-6">
       <div id="home" className="w-full md:w-1/2">
         <h1 className="text-4xl font-bold leading-tight mb-4">
           <span>Get Quick</span>
