@@ -27,24 +27,24 @@ export default function RootLayout({
           <div className="flex-1 w-full flex flex-col items-center">
             <nav className="w-full h-16 sticky top-0 z-50 bg-white shadow-md flex justify-center">
               <div className="w-full max-w-7xl flex justify-between items-center p-4 px-6">
-              <div className="flex">
-  <a href="/" className="flex items-center">
-    <Image
-      alt="Doctor"
-      src="/images/logo.png"
-      width={40}
-      height={40}
-      className="rounded-full mr-1"
-    />
-    <h3 className="text-lg font-semibold">Lobodent</h3>
-  </a>
-</div>
+                <div className="flex">
+                  <a href="/" className="flex items-center">
+                    <Image
+                      alt="Doctor"
+                      src="/images/logo.png"
+                      width={40}
+                      height={40}
+                      className="rounded-full mr-1"
+                    />
+                    <h3 className="text-lg font-semibold">Lobodent</h3>
+                  </a>
+                </div>
                 {/* Menu for larger screens */}
                 <div className="hidden md:flex gap-4">
                   <Link href="/">Home</Link>
                   <Link href="/#services">Services</Link>
                   <Link href="/#feedback">Feedbacks</Link>
-                  <Link href="/appointment">Appointment</Link>
+                  <Link href="/dashboard">Appointment</Link>
                   <Link href="/#faq">FAQs</Link>
                 </div>
 
@@ -67,7 +67,7 @@ export default function RootLayout({
                     <Link href="/">Home</Link>
                     <Link href="/#services">Services</Link>
                     <Link href="/#feedback">Feedbacks</Link>
-                    <Link href="/appointment">Appointment</Link>
+                    <Link href="/dashboard">Appointment</Link>
                     <Link href="/#faq">FAQs</Link>
                   </div>
                 </div>

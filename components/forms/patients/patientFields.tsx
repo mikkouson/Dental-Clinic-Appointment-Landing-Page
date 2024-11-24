@@ -1,27 +1,14 @@
 import React, { useEffect, useState } from "react";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { UseFormReturn, useWatch } from "react-hook-form";
-import { PatientFormValues } from "@/app/types";
-import { Input } from "@/components/ui/input";
-import Maps from "@/components/gmaps";
+import { AppointmentFormValues } from "@/app/types";
 import useSWR from "swr";
-import { RadioBtn } from "@/components/buttons/branchRadio";
-import Field from "../formField";
-import { Calendar } from "@/components/ui/calendar";
-import TimeSlot from "@/components/buttons/selectTime";
-import { Stepper, Step } from "react-form-stepper";
 import { cn } from "@/lib/utils";
 import DatePicker from "./dateField";
 import TimePicker from "./timeField";
 import LoadingSkeleton from "@/components/skeleton";
+import { MapPin } from "lucide-react";
 
 interface Address {
   id: number;
@@ -40,30 +27,101 @@ interface Branch {
   preferred?: boolean;
 }
 
-const sex = [
-  { name: "Male", id: "male" },
-  { name: "Female", id: "female" },
-  { name: "Prefer not to say", id: "prefer_not_to_say" },
-] as const;
-
-interface PatientFieldsProps {
-  form: UseFormReturn<PatientFormValues>;
-  onSubmit: (data: PatientFormValues) => void;
-  setShowPatientFields: (value: boolean) => void;
+interface AppointmentFieldsProps {
+  form: UseFormReturn<AppointmentFormValues>;
+  onSubmit: (data: AppointmentFormValues) => void;
 }
+
+interface Location {
+  latitude: number;
+  longitude: number;
+}
+
+// Custom Stepper Component
+interface StepperProps {
+  currentStep: number;
+  steps: {
+    label: string;
+    number: number;
+  }[];
+}
+
+const CustomStepper = ({ currentStep = 1, steps }: StepperProps) => {
+  return (
+    <div className="w-full mb-8">
+      <div className="flex justify-between items-center">
+        {steps.map((step, index) => (
+          <React.Fragment key={step.number}>
+            <div className="flex flex-col items-center">
+              <div
+                className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium border-2",
+                  step.number === currentStep
+                    ? "bg-yellow-400 border-yellow-400 text-black"
+                    : step.number < currentStep
+                      ? "bg-yellow-400 border-yellow-400 text-black"
+                      : "bg-gray-200 border-gray-200 text-black"
+                )}
+              >
+                {step.number}
+              </div>
+              <span className="mt-2 text-sm font-medium text-black">
+                {step.label}
+              </span>
+            </div>
+
+            {index < steps.length - 1 && (
+              <div className="flex-1 mx-4">
+                <div
+                  className={cn(
+                    "h-0.5 w-full",
+                    currentStep > step.number ? "bg-yellow-400" : "bg-gray-200"
+                  )}
+                />
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const AppointmentStepper = ({ currentStep }: { currentStep: number }) => {
+  const steps = [
+    { number: 1, label: "Branch" },
+    { number: 2, label: "Service" },
+    { number: 3, label: "Date & Time" },
+  ];
+
+  return <CustomStepper currentStep={currentStep} steps={steps} />;
+};
 
 const fetcher = (url: string): Promise<Branch[]> =>
   fetch(url).then((res) => res.json());
 
-// Reusable TimePicker Component
+const calculateDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+) => {
+  const R = 6371; // Earth's radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+};
 
-const PatientFields = ({
-  form,
-  onSubmit,
-  setShowPatientFields,
-}: PatientFieldsProps) => {
+const AppointmentFields = ({ form, onSubmit }: AppointmentFieldsProps) => {
   useEffect(() => {
-    form.setValue("date", new Date()); // Set the default date to today
+    form.setValue("date", new Date());
   }, [form]);
 
   const {
@@ -74,46 +132,81 @@ const PatientFields = ({
 
   const { data: services } = useSWR("/api/services/", fetcher);
 
-  const address = useWatch({
-    control: form.control,
-    name: "address",
-  });
-
   const selectedBranchId = useWatch({
     control: form.control,
     name: "branch",
   });
 
-  const [nearestBranch, setNearestBranch] = useState<Branch | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [travelData, setTravelData] = useState<
     { branchId: number; duration: string; distance: string }[]
   >([]);
+  const [userLocation, setUserLocation] = useState<Location | null>(null);
+  const [nearestBranchId, setNearestBranchId] = useState<number | null>(null);
+  const [locationError, setLocationError] = useState<string>("");
+  const [isLocating, setIsLocating] = useState(false);
 
-  const selectedBranch =
-    branches?.find((branch) => branch.id === selectedBranchId) || nearestBranch;
+  useEffect(() => {
+    if (userLocation && branches) {
+      const branchesWithDistance = branches.map((branch) => ({
+        ...branch,
+        distance: calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          branch.addresses.latitude,
+          branch.addresses.longitude
+        ),
+      }));
 
-  const handleSubmit = (data: PatientFormValues) => {
-    onSubmit(data);
+      const nearest = branchesWithDistance.reduce((prev, curr) =>
+        prev.distance < curr.distance ? prev : curr
+      );
+
+      setNearestBranchId(nearest.id);
+
+      const newTravelData = branchesWithDistance.map((branch) => ({
+        branchId: branch.id,
+        duration: `${Math.round(branch.distance * 2)} mins`,
+        distance: `${branch.distance.toFixed(1)} km`,
+      }));
+
+      setTravelData(newTravelData);
+    }
+  }, [userLocation, branches]);
+
+  const getCurrentLocation = () => {
+    setIsLocating(true);
+    setLocationError("");
+
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser");
+      setIsLocating(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+        setIsLocating(false);
+      },
+      (error) => {
+        setLocationError("Unable to get your location");
+        setIsLocating(false);
+      }
+    );
   };
 
   const handleNextStep = async () => {
     let validStep = false;
 
     if (currentStep === 0) {
-      validStep = await form.trigger([
-        "name",
-        "email",
-        "sex",
-        "address",
-        "phoneNumber",
-        "dob",
-      ]);
-    } else if (currentStep === 1) {
       validStep = await form.trigger("branch");
-    } else if (currentStep === 2) {
+    } else if (currentStep === 1) {
       validStep = await form.trigger("services");
-    } else if (currentStep === 3) {
+    } else if (currentStep === 2) {
       validStep = await form.trigger(["date", "time"]);
     }
 
@@ -126,12 +219,8 @@ const PatientFields = ({
     if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
     } else {
-      setShowPatientFields(false);
       form.reset();
     }
-  };
-  const handleNearestBranchChange = (branch: Branch | null) => {
-    setNearestBranch(branch);
   };
 
   const handleBranchSelect = (branchId: number) => {
@@ -139,214 +228,123 @@ const PatientFields = ({
   };
 
   if (isLoading) return <LoadingSkeleton />;
-
   if (error) return <div>Error loading branches</div>;
 
-  const annotatedBranches: Branch[] = branches!.map((branch) => ({
-    ...branch,
-    preferred: nearestBranch ? branch.id === nearestBranch.id : undefined,
-  }));
-
-  const selectedBranchs = form.watch("branch");
-  const selectedDate = form.watch("date");
-  const handleTravelDataChange = (
-    data: { branchId: number; duration: string; distance: string }[]
-  ) => {
-    setTravelData(data);
-  };
   const branchImages = [
     "/images/branches/marawoy.png",
     "/images/branches/dagatan.png",
     "/images/branches/tanauan.png",
   ];
+
   const { isSubmitting } = form.formState;
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full p-2">
-        <Stepper
-          activeStep={currentStep}
-          styleConfig={{
-            activeBgColor: "#FBBF24",
-            completedBgColor: "#FBBF24",
-            inactiveBgColor: "#E5E7EB",
-            labelFontSize: "1rem",
-            circleFontSize: "1rem",
-            size: "2rem",
-            activeTextColor: "#000000",
-            completedTextColor: "#000000",
-            inactiveTextColor: "#6B7280",
-            borderRadius: "50%",
-            fontWeight: "bold",
-          }}
-          stepClassName="pointer-events-none"
-        >
-          <Step label="Basic Info" />
-          <Step label="Branch" />
-          <Step label="Service" />
-          <Step label="Date & Time" />
-        </Stepper>
+        <AppointmentStepper currentStep={currentStep + 1} />
 
         {currentStep === 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 w-full">
-            <Field form={form} name={"name"} label={"Name"} />
-            <Field form={form} name={"email"} label={"Email"} />
-            <Field form={form} data={sex} name={"sex"} label={"Sex"} />
-            <FormField
-              control={form.control}
-              name="phoneNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
-                  <FormControl>
-                    <div className="relative ml-auto flex-1 md:grow-0">
-                      <p className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground text-sm">
-                        (+639)
-                      </p>
-                      <Input
-                        type="number"
-                        className="w-full rounded-lg bg-background pl-16 "
-                        {...field}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="dob"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date of Birth</FormLabel>
-                  <FormControl>
-                    <Input
-                      min="1899-01-01"
-                      max={new Date().toISOString().split("T")[0]}
-                      type="date"
-                      value={
-                        field.value instanceof Date &&
-                        !isNaN(field.value.getTime())
-                          ? field.value.toISOString().split("T")[0]
-                          : ""
-                      }
-                      onChange={(e) => {
-                        const selectedDate = new Date(e.target.value);
-                        field.onChange(selectedDate);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Maps
-                      field={field}
-                      onNearestBranchChange={handleNearestBranchChange}
-                      onTravelDataChange={handleTravelDataChange}
-                      selectedBranch={selectedBranch}
-                      branches={annotatedBranches}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        )}
-
-        {currentStep === 1 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {annotatedBranches.map((branch, index) => (
-              <div
-                key={branch.id}
-                className="max-w-xs w-full group/card"
-                onClick={() => handleBranchSelect(branch.id)}
+          <>
+            <div className="mb-4 flex items-center justify-between">
+              <Button
+                type="button"
+                onClick={getCurrentLocation}
+                disabled={isLocating}
+                className="flex items-center gap-2"
               >
+                <MapPin className="h-4 w-4" />
+                {isLocating ? "Getting location..." : "Find nearest branch"}
+              </Button>
+              {locationError && (
+                <p className="text-sm text-red-500">{locationError}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {branches?.map((branch, index) => (
                 <div
-                  className={cn(
-                    "relative card h-96 rounded-md shadow-xl max-w-sm mx-auto flex flex-col justify-between p-4 cursor-pointer overflow-hidden",
-                    selectedBranchId === branch.id
-                      ? "ring-4 ring-yellow-500"
-                      : ""
-                  )}
+                  key={branch.id}
+                  className="max-w-xs w-full group/card"
+                  onClick={() => handleBranchSelect(branch.id)}
                 >
                   <div
                     className={cn(
-                      "absolute inset-0 bg-cover bg-center transition-all duration-300",
+                      "relative card h-96 rounded-md shadow-xl max-w-sm mx-auto flex flex-col justify-between p-4 cursor-pointer overflow-hidden",
                       selectedBranchId === branch.id
-                        ? "brightness-[1.75]"
-                        : "group-hover/card:brightness-100 brightness-75"
+                        ? "ring-4 ring-yellow-500"
+                        : "",
+                      nearestBranchId === branch.id && !selectedBranchId
+                        ? "ring-4 ring-green-500"
+                        : ""
                     )}
-                    style={{
-                      backgroundImage: `linear-gradient(to bottom right, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0)), url(${branchImages[index % branchImages.length]})`,
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black opacity-20 transition-all duration-300 group-hover/card:opacity-20"></div>
-
-                  <div className="relative z-10 flex flex-row items-center space-x-4">
-                    <div className="flex flex-col">
-                      {branch.preferred && (
-                        <p className="font-normal text-base text-green-400">
-                          Preferred
-                        </p>
+                  >
+                    <div
+                      className={cn(
+                        "absolute inset-0 bg-cover bg-center transition-all duration-300",
+                        selectedBranchId === branch.id
+                          ? "brightness-[1.75]"
+                          : "group-hover/card:brightness-100 brightness-75"
                       )}
+                      style={{
+                        backgroundImage: `linear-gradient(to bottom right, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0)), url(${branchImages[index % branchImages.length]})`,
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black opacity-20 transition-all duration-300 group-hover/card:opacity-20"></div>
+
+                    <div className="relative z-10 text content">
+                      <div className="flex items-center justify-between">
+                        <h1 className="font-bold text-xl md:text-2xl text-gray-50">
+                          {branch.name}
+                        </h1>
+                        {nearestBranchId === branch.id && (
+                          <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                            Nearest
+                          </span>
+                        )}
+                      </div>
+                      <p className="font-normal text-sm text-gray-50">
+                        <span className="font-medium">
+                          Estimated Travel Time:{" "}
+                        </span>
+                        {travelData.find((d) => d.branchId === branch.id)
+                          ?.duration || "Calculating..."}
+                      </p>
+                      <p className="font-normal text-sm text-gray-50">
+                        <span className="font-medium">Distance: </span>
+                        {travelData.find((d) => d.branchId === branch.id)
+                          ?.distance || "Calculating..."}
+                      </p>
                     </div>
                   </div>
-
-                  <div className="relative z-10 text content">
-                    <h1 className="font-bold text-xl md:text-2xl text-gray-50">
-                      {branch.name}
-                    </h1>
-                    <p className="font-normal text-sm text-gray-50">
-                      <span className="font-medium">
-                        Estimated Travel Time:{" "}
-                      </span>
-                      {travelData.find((d) => d.branchId === branch.id)
-                        ?.duration || "Calculating..."}
-                    </p>
-                    <p className="font-normal text-sm text-gray-50">
-                      <span className="font-medium">Distance: </span>
-                      {travelData.find((d) => d.branchId === branch.id)
-                        ?.distance || "Calculating..."}
-                    </p>
-                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
 
-        {currentStep === 2 && (
-          <div className="grid grid-cols-1 gap-4">
-            {services?.map((service, index) => (
+        {currentStep === 1 && (
+          <div className="grid grid-cols-4 gap-3">
+            {services?.map((service) => (
               <div
                 key={service.id}
-                className="w-full group/card"
+                className="w-full group"
                 onClick={() => form.setValue("services", service.id)}
               >
                 <div
                   className={cn(
-                    "flex justify-between p-2 rounded-lg border cursor-pointer",
+                    "h-full p-3 rounded-lg border border-gray-200 shadow-sm transition-all duration-200",
+                    "hover:shadow hover:border-yellow-200 cursor-pointer",
+                    "bg-white hover:bg-gray-50",
                     form.watch("services") === service.id
                       ? "ring-2 ring-yellow-500"
                       : ""
                   )}
                 >
-                  <div className="">
-                    <h1 className="font-bold text-xl text-gray-900">
+                  <div className="space-y-1">
+                    <h1 className="font-semibold text-base text-gray-900 group-hover:text-gray-800">
                       {service.name}
                     </h1>
-                    <p className="font-normal text-sm text-gray-700">
+                    <p className="font-normal text-xs text-gray-600 group-hover:text-gray-700 line-clamp-2">
                       {service.description || "Description not available"}
                     </p>
                   </div>
@@ -356,7 +354,7 @@ const PatientFields = ({
           </div>
         )}
 
-        {currentStep === 3 && (
+        {currentStep === 2 && (
           <div className="flex">
             <DatePicker form={form} name="date" />
             <div className="w-full ml-8">
@@ -371,17 +369,18 @@ const PatientFields = ({
             </div>
           </div>
         )}
+
         <div className="flex justify-between mt-4">
           <Button onClick={handlePreviousStep} type="button">
             Back
           </Button>
 
-          {currentStep < 3 && (
+          {currentStep < 2 && (
             <Button onClick={handleNextStep} type="button">
               Next
             </Button>
           )}
-          {currentStep === 3 && (
+          {currentStep === 2 && (
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
@@ -392,4 +391,4 @@ const PatientFields = ({
   );
 };
 
-export default PatientFields;
+export default AppointmentFields;
