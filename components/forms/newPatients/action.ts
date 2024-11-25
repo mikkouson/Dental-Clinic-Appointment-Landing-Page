@@ -1,22 +1,46 @@
+// server-action.ts
 "use server";
+
 import { PatientFormValues, PatientSchema } from "@/app/types";
 import { createAdminClient } from "@/utils/supabase/server";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+export type RegistrationResult = {
+  success?: boolean;
+  userId?: string;
+  error?: {
+    code: string;
+    message: string;
+    field?: string;
+    details?: Record<string, any>;
+  };
+};
+export async function createNewUser(
+  formData: PatientFormValues
+): Promise<RegistrationResult> {
+  if (!formData) {
+    return {
+      error: {
+        code: "FORM_DATA_REQUIRED",
+        message: "Form data is required",
+      },
+    };
+  }
 
-export async function createNewUser(formData: PatientFormValues) {
+  const result = PatientSchema.safeParse(formData);
+
+  if (!result.success) {
+    console.log("Validation errors:", result.error.format());
+    return {
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Please check your input and try again",
+        details: result.error.format(),
+      },
+    };
+  }
+
+  const supabase = createAdminClient();
+
   try {
-    if (!formData) throw new Error("Form data is required");
-
-    const result = PatientSchema.safeParse(formData);
-
-    if (!result.success) {
-      console.log("Validation errors:", result.error.format());
-      throw new Error("Validation failed");
-    }
-
-    const supabase = createAdminClient();
-
     const { data, error } = await supabase.auth.admin.createUser({
       email: formData.email,
       password: formData.password,
@@ -38,28 +62,59 @@ export async function createNewUser(formData: PatientFormValues) {
     });
 
     if (error) {
-      if (error.message.includes("duplicate"))
-        throw new Error("User already exists");
-      if (error.message.includes("invalid_email"))
-        throw new Error("Invalid email");
-      if (error.message.includes("weak_password"))
-        throw new Error("Password too weak");
-      throw error;
+      if (error.message.includes("duplicate")) {
+        return {
+          error: {
+            code: "EMAIL_TAKEN",
+            message: "This email is already registered",
+            field: "email",
+          },
+        };
+      }
+      if (error.message.includes("invalid_email")) {
+        return {
+          error: {
+            code: "INVALID_EMAIL",
+            message: "Please enter a valid email address",
+            field: "email",
+          },
+        };
+      }
+      if (error.message.includes("weak_password")) {
+        return {
+          error: {
+            code: "WEAK_PASSWORD",
+            message: "Password is too weak. Please use a stronger password",
+            field: "password",
+          },
+        };
+      }
+
+      return {
+        error: {
+          code: "UNKNOWN_ERROR",
+          message: error.message,
+        },
+      };
     }
 
-    if (!data?.user) throw new Error("Failed to create user");
-
-    // Revalidate the path if needed
-    revalidatePath("/", "layout");
-
-    // Redirect to login page on success
-    redirect("/login");
-  } catch (error) {
-    // Handle any errors and rethrow
-    if (error instanceof Error) {
-      throw error;
+    if (!data?.user) {
+      return {
+        error: {
+          code: "USER_CREATION_FAILED",
+          message: "Failed to create user",
+        },
+      };
     }
-    // Handle unknown errors
-    throw new Error("An unexpected error occurred");
+
+    return { success: true, userId: data.user.id };
+  } catch (error: any) {
+    console.error("Unexpected error during user creation:", error);
+    return {
+      error: {
+        code: "UNEXPECTED_ERROR",
+        message: "An unexpected error occurred. Please try again later.",
+      },
+    };
   }
 }

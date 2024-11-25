@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import DatePicker from "./dateField";
 import TimePicker from "./timeField";
 import LoadingSkeleton from "@/components/skeleton";
-import { MapPin } from "lucide-react";
 
 interface Address {
   id: number;
@@ -30,11 +29,6 @@ interface Branch {
 interface AppointmentFieldsProps {
   form: UseFormReturn<AppointmentFormValues>;
   onSubmit: (data: AppointmentFormValues) => void;
-}
-
-interface Location {
-  latitude: number;
-  longitude: number;
 }
 
 // Custom Stepper Component
@@ -137,22 +131,25 @@ const AppointmentFields = ({ form, onSubmit }: AppointmentFieldsProps) => {
     name: "branch",
   });
 
+  const address = useWatch({
+    control: form.control,
+    name: "address",
+  });
+
   const [currentStep, setCurrentStep] = useState(0);
   const [travelData, setTravelData] = useState<
     { branchId: number; duration: string; distance: string }[]
   >([]);
-  const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [nearestBranchId, setNearestBranchId] = useState<number | null>(null);
-  const [locationError, setLocationError] = useState<string>("");
-  const [isLocating, setIsLocating] = useState(false);
 
+  // Update travel data when address or branches change
   useEffect(() => {
-    if (userLocation && branches) {
+    if (address && branches && address.latitude && address.longitude) {
       const branchesWithDistance = branches.map((branch) => ({
         ...branch,
         distance: calculateDistance(
-          userLocation.latitude,
-          userLocation.longitude,
+          address.latitude,
+          address.longitude,
           branch.addresses.latitude,
           branch.addresses.longitude
         ),
@@ -172,32 +169,7 @@ const AppointmentFields = ({ form, onSubmit }: AppointmentFieldsProps) => {
 
       setTravelData(newTravelData);
     }
-  }, [userLocation, branches]);
-
-  const getCurrentLocation = () => {
-    setIsLocating(true);
-    setLocationError("");
-
-    if (!navigator.geolocation) {
-      setLocationError("Geolocation is not supported by your browser");
-      setIsLocating(false);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-        setIsLocating(false);
-      },
-      (error) => {
-        setLocationError("Unable to get your location");
-        setIsLocating(false);
-      }
-    );
-  };
+  }, [address, branches]);
 
   const handleNextStep = async () => {
     let validStep = false;
@@ -244,82 +216,65 @@ const AppointmentFields = ({ form, onSubmit }: AppointmentFieldsProps) => {
         <AppointmentStepper currentStep={currentStep + 1} />
 
         {currentStep === 0 && (
-          <>
-            <div className="mb-4 flex items-center justify-between">
-              <Button
-                type="button"
-                onClick={getCurrentLocation}
-                disabled={isLocating}
-                className="flex items-center gap-2"
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {branches?.map((branch, index) => (
+              <div
+                key={branch.id}
+                className="max-w-xs w-full group/card"
+                onClick={() => handleBranchSelect(branch.id)}
               >
-                <MapPin className="h-4 w-4" />
-                {isLocating ? "Getting location..." : "Find nearest branch"}
-              </Button>
-              {locationError && (
-                <p className="text-sm text-red-500">{locationError}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {branches?.map((branch, index) => (
                 <div
-                  key={branch.id}
-                  className="max-w-xs w-full group/card"
-                  onClick={() => handleBranchSelect(branch.id)}
+                  className={cn(
+                    "relative card h-96 rounded-md shadow-xl max-w-sm mx-auto flex flex-col justify-between p-4 cursor-pointer overflow-hidden",
+                    selectedBranchId === branch.id
+                      ? "ring-4 ring-yellow-500"
+                      : "",
+                    nearestBranchId === branch.id && !selectedBranchId
+                      ? "ring-4 ring-green-500"
+                      : ""
+                  )}
                 >
                   <div
                     className={cn(
-                      "relative card h-96 rounded-md shadow-xl max-w-sm mx-auto flex flex-col justify-between p-4 cursor-pointer overflow-hidden",
+                      "absolute inset-0 bg-cover bg-center transition-all duration-300",
                       selectedBranchId === branch.id
-                        ? "ring-4 ring-yellow-500"
-                        : "",
-                      nearestBranchId === branch.id && !selectedBranchId
-                        ? "ring-4 ring-green-500"
-                        : ""
+                        ? "brightness-[1.75]"
+                        : "group-hover/card:brightness-100 brightness-75"
                     )}
-                  >
-                    <div
-                      className={cn(
-                        "absolute inset-0 bg-cover bg-center transition-all duration-300",
-                        selectedBranchId === branch.id
-                          ? "brightness-[1.75]"
-                          : "group-hover/card:brightness-100 brightness-75"
-                      )}
-                      style={{
-                        backgroundImage: `linear-gradient(to bottom right, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0)), url(${branchImages[index % branchImages.length]})`,
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black opacity-20 transition-all duration-300 group-hover/card:opacity-20"></div>
+                    style={{
+                      backgroundImage: `linear-gradient(to bottom right, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0)), url(${branchImages[index % branchImages.length]})`,
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black opacity-20 transition-all duration-300 group-hover/card:opacity-20"></div>
 
-                    <div className="relative z-10 text content">
-                      <div className="flex items-center justify-between">
-                        <h1 className="font-bold text-xl md:text-2xl text-gray-50">
-                          {branch.name}
-                        </h1>
-                        {nearestBranchId === branch.id && (
-                          <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                            Nearest
-                          </span>
-                        )}
-                      </div>
-                      <p className="font-normal text-sm text-gray-50">
-                        <span className="font-medium">
-                          Estimated Travel Time:{" "}
+                  <div className="relative z-10 text content">
+                    <div className="flex items-center justify-between">
+                      <h1 className="font-bold text-xl md:text-2xl text-gray-50">
+                        {branch.name}
+                      </h1>
+                      {nearestBranchId === branch.id && (
+                        <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                          Nearest
                         </span>
-                        {travelData.find((d) => d.branchId === branch.id)
-                          ?.duration || "Calculating..."}
-                      </p>
-                      <p className="font-normal text-sm text-gray-50">
-                        <span className="font-medium">Distance: </span>
-                        {travelData.find((d) => d.branchId === branch.id)
-                          ?.distance || "Calculating..."}
-                      </p>
+                      )}
                     </div>
+                    <p className="font-normal text-sm text-gray-50">
+                      <span className="font-medium">
+                        Estimated Travel Time:{" "}
+                      </span>
+                      {travelData.find((d) => d.branchId === branch.id)
+                        ?.duration || "Calculating..."}
+                    </p>
+                    <p className="font-normal text-sm text-gray-50">
+                      <span className="font-medium">Distance: </span>
+                      {travelData.find((d) => d.branchId === branch.id)
+                        ?.distance || "Calculating..."}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </>
+              </div>
+            ))}
+          </div>
         )}
 
         {currentStep === 1 && (

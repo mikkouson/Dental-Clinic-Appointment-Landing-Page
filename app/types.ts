@@ -51,6 +51,22 @@ export type PatientFormValues = z.infer<typeof PatientSchema>;
 
 export const AppointmentSchema = z.object({
   patient_id: z.number(),
+  address: z
+    .object({
+      id: z.number().optional(),
+      address: z.string({
+        required_error: "Address is required",
+      }),
+      latitude: z.number({
+        required_error: "Invalid address",
+      }),
+      longitude: z.number({
+        required_error: "Invalid address",
+      }),
+    })
+    .refine((data) => data.address.trim().length > 0, {
+      message: "Address must be provided",
+    }),
   branch: z.number({
     required_error: "Please select an branch to display.",
   }),

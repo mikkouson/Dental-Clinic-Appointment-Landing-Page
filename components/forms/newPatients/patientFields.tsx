@@ -71,7 +71,7 @@ const PatientFields = ({
         <div className="flex items-center">
           <Link
             href="/login"
-            className="absolute text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+            className="absolute text-muted-foreground hover:text- transition-colors flex items-center gap-2"
           >
             <ArrowLeft size={16} />
             <span>Back to Login</span>
