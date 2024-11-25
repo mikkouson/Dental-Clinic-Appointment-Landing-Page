@@ -10,10 +10,7 @@ export default async function AppointmentView() {
   console.log(user);
   return (
     <div className="w-full">
-      <PatientCard
-        id={user?.user_metadata.patient_id}
-        appointment={user?.user_metadata.appointment_id}
-      />
+      <PatientCard />
     </div>
   );
 }

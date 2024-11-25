@@ -79,207 +79,207 @@ async function createNewPatient(data: PatientFormValues): Promise<number> {
   return newPatient.id;
 }
 
-export async function newAppointment(data: PatientFormValues) {
-  // Validate the incoming data
-  const result = PatientSchema.safeParse(data);
+// export async function newAppointment(data: PatientFormValues) {
+//   // Validate the incoming data
+//   const result = PatientSchema.safeParse(data);
 
-  if (!result.success) {
-    console.error("Validation errors:", result.error.format());
-    throw new Error("Validation errors");
-  }
+//   if (!result.success) {
+//     console.error("Validation errors:", result.error.format());
+//     throw new Error("Validation errors");
+//   }
 
-  const supabase = createClient();
+//   const supabase = createClient();
 
-  // Format the DOB correctly
-  const formattedDOB = moment(data.dob).format("YYYY-MM-DD");
+//   // Format the DOB correctly
+//   const formattedDOB = moment(data.dob).format("YYYY-MM-DD");
 
-  // Normalize the input name
-  const normalizedName = normalizeName(data.name);
+//   // Normalize the input name
+//   const normalizedName = normalizeName(data.name);
 
-  // Fetch patients matching DOB, email, or phone number
-  const { data: existingPatients, error: existingPatientError } = await supabase
-    .from("patients")
-    .select("id, name")
-    .eq("dob", formattedDOB)
-    .or(`email.eq.${data.email},phone_number.eq.${data.phoneNumber}`);
+//   // Fetch patients matching DOB, email, or phone number
+//   const { data: existingPatients, error: existingPatientError } = await supabase
+//     .from("patients")
+//     .select("id, name")
+//     .eq("dob", formattedDOB)
+//     .or(`email.eq.${data.email},phone_number.eq.${data.phoneNumber}`);
 
-  if (existingPatientError) {
-    const errorMessage =
-      existingPatientError.message || "Error fetching patient";
-    console.error("Error fetching patient:", errorMessage);
-    throw new Error(errorMessage); // Ensure error is thrown
-  }
+//   if (existingPatientError) {
+//     const errorMessage =
+//       existingPatientError.message || "Error fetching patient";
+//     console.error("Error fetching patient:", errorMessage);
+//     throw new Error(errorMessage); // Ensure error is thrown
+//   }
 
-  let patientId: number;
+//   let patientId: number;
 
-  if (!existingPatients || existingPatients.length === 0) {
-    console.log(
-      "No patient found with the given details. Creating a new patient."
-    );
-    try {
-      patientId = await createNewPatient(data);
-    } catch (error: any) {
-      console.error("Error creating new patient:", error.message);
-      throw new Error(error.message || "Error creating new patient");
-    }
-  } else {
-    // Filter patients by normalized name
-    const matchingPatients = existingPatients.filter((patient) => {
-      const patientNormalizedName = normalizeName(patient.name);
-      return patientNormalizedName === normalizedName;
-    });
+//   if (!existingPatients || existingPatients.length === 0) {
+//     console.log(
+//       "No patient found with the given details. Creating a new patient."
+//     );
+//     try {
+//       patientId = await createNewPatient(data);
+//     } catch (error: any) {
+//       console.error("Error creating new patient:", error.message);
+//       throw new Error(error.message || "Error creating new patient");
+//     }
+//   } else {
+//     // Filter patients by normalized name
+//     const matchingPatients = existingPatients.filter((patient) => {
+//       const patientNormalizedName = normalizeName(patient.name);
+//       return patientNormalizedName === normalizedName;
+//     });
 
-    if (matchingPatients.length === 0) {
-      console.log(
-        "No patient found with the given name and DOB. Creating a new patient."
-      );
-      try {
-        patientId = await createNewPatient(data);
-      } catch (error: any) {
-        console.error("Error creating new patient:", error.message);
-        throw new Error(error.message || "Error creating new patient");
-      }
-    } else if (matchingPatients.length > 1) {
-      console.error(
-        "Multiple patients found with the same details. Consider refining the search."
-      );
-      throw new Error(
-        "Multiple patients found with the same details. Consider refining the search."
-      );
-    } else {
-      patientId = matchingPatients[0].id;
-      console.log(`Patient exists with ID: ${patientId}`);
-    }
-  }
+//     if (matchingPatients.length === 0) {
+//       console.log(
+//         "No patient found with the given name and DOB. Creating a new patient."
+//       );
+//       try {
+//         patientId = await createNewPatient(data);
+//       } catch (error: any) {
+//         console.error("Error creating new patient:", error.message);
+//         throw new Error(error.message || "Error creating new patient");
+//       }
+//     } else if (matchingPatients.length > 1) {
+//       console.error(
+//         "Multiple patients found with the same details. Consider refining the search."
+//       );
+//       throw new Error(
+//         "Multiple patients found with the same details. Consider refining the search."
+//       );
+//     } else {
+//       patientId = matchingPatients[0].id;
+//       console.log(`Patient exists with ID: ${patientId}`);
+//     }
+//   }
 
-  // Check if the patient already has an appointment on the given date
-  const appointmentDate = moment(data.date).format("YYYY-MM-DD");
+//   // Check if the patient already has an appointment on the given date
+//   const appointmentDate = moment(data.date).format("YYYY-MM-DD");
 
-  const { data: existingAppointments, error: existingAppointmentsError } =
-    await supabase
-      .from("appointments")
-      .select("id")
-      .eq("patient_id", patientId)
-      .eq("date", appointmentDate);
+//   const { data: existingAppointments, error: existingAppointmentsError } =
+//     await supabase
+//       .from("appointments")
+//       .select("id")
+//       .eq("patient_id", patientId)
+//       .eq("date", appointmentDate);
 
-  if (existingAppointmentsError) {
-    const errorMessage =
-      existingAppointmentsError.message || "Error fetching appointments";
-    console.error("Error fetching appointments:", errorMessage);
-    throw new Error(errorMessage); // Ensure error is thrown
-  }
+//   if (existingAppointmentsError) {
+//     const errorMessage =
+//       existingAppointmentsError.message || "Error fetching appointments";
+//     console.error("Error fetching appointments:", errorMessage);
+//     throw new Error(errorMessage); // Ensure error is thrown
+//   }
 
-  if (existingAppointments && existingAppointments.length > 0) {
-    console.error("Patient already has an appointment on this date.");
-    throw new Error("Patient already has an appointment on this date.");
-  }
+//   if (existingAppointments && existingAppointments.length > 0) {
+//     console.error("Patient already has an appointment on this date.");
+//     throw new Error("Patient already has an appointment on this date.");
+//   }
 
-  console.log("Patient does not have an appointment on this date.");
+//   console.log("Patient does not have an appointment on this date.");
 
-  // Proceed to create the new appointment
-  const { data: newAppointment, error: newAppointmentError } = await supabase
-    .from("appointments")
-    .insert([
-      {
-        patient_id: patientId,
-        service: data.services,
-        branch: data.branch,
-        date: appointmentDate,
-        time: data.time,
-        type: "online",
-        status: 2,
-      },
-    ])
-    .select("*")
-    .single();
+//   // Proceed to create the new appointment
+//   const { data: newAppointment, error: newAppointmentError } = await supabase
+//     .from("appointments")
+//     .insert([
+//       {
+//         patient_id: patientId,
+//         service: data.services,
+//         branch: data.branch,
+//         date: appointmentDate,
+//         time: data.time,
+//         type: "online",
+//         status: 2,
+//       },
+//     ])
+//     .select("*")
+//     .single();
 
-  if (newAppointmentError) {
-    const errorMessage =
-      newAppointmentError.message || "Error creating the appointment";
-    console.error("Error creating appointment:", errorMessage);
-    throw new Error(errorMessage); // Ensure error is thrown
-  }
+//   if (newAppointmentError) {
+//     const errorMessage =
+//       newAppointmentError.message || "Error creating the appointment";
+//     console.error("Error creating appointment:", errorMessage);
+//     throw new Error(errorMessage); // Ensure error is thrown
+//   }
 
-  console.log(
-    `Appointment created successfully: ${JSON.stringify(newAppointment)}`
-  );
+//   console.log(
+//     `Appointment created successfully: ${JSON.stringify(newAppointment)}`
+//   );
 
-  await pendingAppointment({ aptId: newAppointment.id });
-  revalidatePath("/appointment", "layout");
-  redirect("/appointment");
+//   await pendingAppointment({ aptId: newAppointment.id });
+//   revalidatePath("/appointment", "layout");
+//   redirect("/appointment");
 
-  return {
-    success: true,
-    message: "Appointment created successfully.",
-    appointment: newAppointment,
-  };
-}
+//   return {
+//     success: true,
+//     message: "Appointment created successfully.",
+//     appointment: newAppointment,
+//   };
+// }
 
-interface AppointmentActionProps {
-  aptId: number;
-}
+// interface AppointmentActionProps {
+//   aptId: number;
+// }
 
-export async function pendingAppointment({ aptId }: AppointmentActionProps) {
-  const supabase = createClient();
+// export async function pendingAppointment({ aptId }: AppointmentActionProps) {
+//   const supabase = createClient();
 
-  try {
-    // Combine status and appointment_ticket updates in one query
-    const { data: appointmentData, error: updateError } = await supabase
-      .from("appointments")
-      .update({
-        status: 2,
-      })
-      .eq("id", aptId)
-      .select(
-        `
-        *,
-        patients (
-          *
-        )
-      `
-      )
-      .single();
+//   try {
+//     // Combine status and appointment_ticket updates in one query
+//     const { data: appointmentData, error: updateError } = await supabase
+//       .from("appointments")
+//       .update({
+//         status: 2,
+//       })
+//       .eq("id", aptId)
+//       .select(
+//         `
+//         *,
+//         patients (
+//           *
+//         )
+//       `
+//       )
+//       .single();
 
-    if (updateError) {
-      throw new Error(`Error updating appointment: ${updateError.message}`);
-    }
+//     if (updateError) {
+//       throw new Error(`Error updating appointment: ${updateError.message}`);
+//     }
 
-    // Extract patient email from the related patient data
-    const patientEmail = appointmentData.patients?.email;
+//     // Extract patient email from the related patient data
+//     const patientEmail = appointmentData.patients?.email;
 
-    if (!patientEmail) {
-      throw new Error(
-        "No email found for the patient associated with this appointment."
-      );
-    }
+//     if (!patientEmail) {
+//       throw new Error(
+//         "No email found for the patient associated with this appointment."
+//       );
+//     }
 
-    // Send the confirmation email using the retrieved appointment data
-    const emailResponse = await resend.emails.send({
-      from: "Appointment@email.lobodentdentalclinic.online",
-      to: [patientEmail], // Send to the patient's email
-      subject: "Appointment Application",
-      react: DentalAppointmentPendingEmail() as React.ReactElement, // Ensure this matches your email service's expected format
-    });
+//     // Send the confirmation email using the retrieved appointment data
+//     const emailResponse = await resend.emails.send({
+//       from: "Appointment@email.lobodentdentalclinic.online",
+//       to: [patientEmail], // Send to the patient's email
+//       subject: "Appointment Application",
+//       react: DentalAppointmentPendingEmail() as React.ReactElement, // Ensure this matches your email service's expected format
+//     });
 
-    // Check if the email was sent successfully
-    if (emailResponse.error) {
-      throw new Error(
-        `Error sending confirmation email: ${emailResponse.error.message}`
-      );
-    }
+//     // Check if the email was sent successfully
+//     if (emailResponse.error) {
+//       throw new Error(
+//         `Error sending confirmation email: ${emailResponse.error.message}`
+//       );
+//     }
 
-    console.log("Appointment rejection email sent to:", patientEmail);
+//     console.log("Appointment rejection email sent to:", patientEmail);
 
-    // Revalidate the path to update the cache
-    revalidatePath("/");
-  } catch (error) {
-    // Catch any errors that occur during the process and log them
-    console.error("An error occurred during appointment acceptance:", error);
-  }
+//     // Revalidate the path to update the cache
+//     revalidatePath("/");
+//   } catch (error) {
+//     // Catch any errors that occur during the process and log them
+//     console.error("An error occurred during appointment acceptance:", error);
+//   }
 
-  // Redirect after all the async operations are complete
-  redirect("/appointment");
-}
+//   // Redirect after all the async operations are complete
+//   redirect("/appointment");
+// }
 
 export async function rescheduleAppointment(data: RescheduleFormValues) {
   const result = ReScheduleSchema.safeParse(data);
@@ -315,10 +315,10 @@ export async function rescheduleAppointment(data: RescheduleFormValues) {
 
   // Revalidate the path and redirect
   revalidatePath("/");
-  redirect("/appointment/view");
+  redirect("/dashboard  ");
 }
 
-export async function cancelAppointment({ aptId }: AppointmentActionProps) {
+export async function cancelAppointment({ aptId }: any) {
   const supabase = createClient();
 
   // Combine status and appointment_ticket updates in one query
@@ -352,6 +352,6 @@ export async function signOut() {
     redirect("/error");
   } else {
     revalidatePath("/", "layout");
-    redirect("/appointment/login");
+    redirect("/login");
   }
 }

@@ -16,7 +16,7 @@ export default function Header() {
           tailored to your comfort and needs, all in a welcoming and modern
           environment.
         </p>
-        <a href="/appointment">
+        <a href="/dashboard">
           <button className="bg-[#f1d04d] text-white px-6 py-3 rounded-md shadow hover:bg-[#e6c200] transition">
             Book Now
           </button>

@@ -87,7 +87,7 @@ export function EditAppointment({
 
     try {
       await rescheduleAppointment(formData);
-
+      mutate();
       toast({
         className: cn(
           "top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4"
@@ -99,6 +99,8 @@ export function EditAppointment({
       });
       setOpen(false);
     } catch (error: any) {
+      mutate();
+
       toast({
         className: cn(
           "top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4"

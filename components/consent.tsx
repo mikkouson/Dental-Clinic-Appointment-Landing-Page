@@ -36,8 +36,9 @@ export default function Consent({ setShowPatientFields }: ConsentProps) {
           <div className="border-l-4 border-red-500 p-4 bg-gray-50 mb-6">
             <p className="text-red-600 font-bold mb-1">Reminder:</p>
             <p>
-              To ensure a smooth experience, Please arrive 10 minutes before your scheduled appointment time and
-              kindly bring any relevant medical records, if applicable.
+              To ensure a smooth experience, Please arrive 10 minutes before
+              your scheduled appointment time and kindly bring any relevant
+              medical records, if applicable.
             </p>
           </div>
 
@@ -49,15 +50,15 @@ export default function Consent({ setShowPatientFields }: ConsentProps) {
               first-served basis.
             </p>
             <p className="mb-2">
-            We are committed to providing you with the best possible dental care in a 
-            comfortable and safe environment. To ensure that we can offer you 
-            the most efficient and personalized services, we kindly ask that you review 
-            and agree to our terms and conditions.
+              We are committed to providing you with the best possible dental
+              care in a comfortable and safe environment. To ensure that we can
+              offer you the most efficient and personalized services, we kindly
+              ask that you review and agree to our terms and conditions.
             </p>
             <p className="mb-2">
-            Please take a moment to read through the information below before proceeding.
+              Please take a moment to read through the information below before
+              proceeding.
             </p>
-          
           </div>
 
           {/* Consent */}
@@ -72,13 +73,16 @@ export default function Consent({ setShowPatientFields }: ConsentProps) {
             <label htmlFor="consent-checkbox" className="ml-2 text-sm">
               By using our services, we assume you agree to Lobodent Dental
               Clinic's terms and conditions, including the collection and use of
-               personal data for the purposes of providing dental services. Please 
-               be aware that any information provided will be stored securely and used 
-               solely for the purposes of treatment, appointment scheduling, and communication 
-               related to your dental care. We are committed to protecting your privacy and 
-              ensuring that your data is handled with the highest level of security.
-              By continuing to use our services, you acknowledge that you have read, understood, and agreed to these terms. 
-              If you have any questions or concerns, please do not hesitate to contact our clinic directly.
+              personal data for the purposes of providing dental services.
+              Please be aware that any information provided will be stored
+              securely and used solely for the purposes of treatment,
+              appointment scheduling, and communication related to your dental
+              care. We are committed to protecting your privacy and ensuring
+              that your data is handled with the highest level of security. By
+              continuing to use our services, you acknowledge that you have
+              read, understood, and agreed to these terms. If you have any
+              questions or concerns, please do not hesitate to contact our
+              clinic directly.
             </label>
           </div>
 
@@ -103,7 +107,7 @@ export default function Consent({ setShowPatientFields }: ConsentProps) {
               </div>
             </div>
             {/* Manage Appointment Button */}
-            <Link href={"/appointment/login"}>
+            <Link href={"/login"}>
               <Button className="w-full px-4 py-2 rounded font-semibold transition duration-200">
                 Manage Appointment
               </Button>

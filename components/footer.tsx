@@ -54,7 +54,7 @@ export default function Footer() {
             </li>
             <li className="mb-2">
               <Link
-                href="/appointment"
+                href="/dashboard"
                 className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
               >
                 Book Appointment

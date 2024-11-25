@@ -33,7 +33,7 @@ export async function GET(req: NextRequest, res: NextResponse) {
       )
     `
     )
-    .eq("id", user?.user_metadata.patient_id)
+    .eq("user_id", user?.id)
     .single();
 
   if (error) {
