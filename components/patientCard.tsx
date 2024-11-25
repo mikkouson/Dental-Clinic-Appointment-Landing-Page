@@ -59,10 +59,19 @@ export default function BlackWhiteYellowPatientCard() {
     `/api/patientdetails`,
     fetcher
   );
-
   useEffect(() => {
     if (data?.id) {
       form.setValue("patient_id", Number(data.id));
+
+      // Set address related fields if they exist in the data
+      if (data.address) {
+        form.setValue("address", {
+          id: data.address.id,
+          address: data.address.address,
+          latitude: data.address.latitude,
+          longitude: data.address.longitude,
+        });
+      }
     }
   }, [data, form]);
 

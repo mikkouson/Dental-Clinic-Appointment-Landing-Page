@@ -1,18 +1,11 @@
 "use strict";
-import React from "react";
+import { PatientFormValues, PatientSchema } from "@/app/types";
+import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { PatientSchema, PatientFormValues } from "@/app/types";
-import { cn } from "@/lib/utils";
-import { toast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import PatientFields from "./patientFields";
-import { PatientCol } from "@/app/schema";
-import { useRouter } from "next/navigation";
-import { usePatients } from "@/components/hooks/usePatient";
-import { ToastAction } from "@/components/ui/toast";
 import { createNewUser } from "./action";
+import PatientFields from "./patientFields";
 
 export function NewPatientForm() {
   const form = useForm<PatientFormValues>({
@@ -21,8 +14,29 @@ export function NewPatientForm() {
 
   async function onSubmit(data: PatientFormValues) {
     try {
-      // Here you can add your API call to save the patient data
-      await createNewUser(data);
+      const result = await createNewUser(data);
+
+      if (result.error) {
+        // Handle field-specific errors
+        if (result.error.field) {
+          form.setError(result.error.field as any, {
+            type: "manual",
+            message: result.error.message,
+          });
+        }
+
+        toast({
+          className: cn(
+            "top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4"
+          ),
+          title: "Error",
+          description: result.error.message,
+          variant: "destructive",
+          duration: 3000,
+        });
+        return;
+      }
+
       toast({
         className: cn(
           "top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4"
@@ -33,7 +47,6 @@ export function NewPatientForm() {
         duration: 3000,
       });
 
-      // Optional: Reset form after successful submission
       form.reset();
     } catch (error: any) {
       toast({
@@ -41,8 +54,7 @@ export function NewPatientForm() {
           "top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4"
         ),
         title: "Error",
-        description:
-          error.message || "An error occurred while submitting the form.",
+        description: "An unexpected error occurred. Please try again later.",
         variant: "destructive",
         duration: 3000,
       });
