@@ -6,11 +6,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { createNewUser } from "./action";
 import PatientFields from "./patientFields";
+import { useRouter } from "next/navigation";
 
 export function NewPatientForm() {
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(PatientSchema),
   });
+  const router = useRouter();
 
   async function onSubmit(data: PatientFormValues) {
     try {
@@ -47,6 +49,7 @@ export function NewPatientForm() {
         duration: 3000,
       });
 
+      router.push("/login");
       form.reset();
     } catch (error: any) {
       toast({
