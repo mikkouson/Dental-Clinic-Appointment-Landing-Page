@@ -12,7 +12,26 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "lucide-react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import {
+  Eye,
+  EyeOff,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  MapPin,
+  Lock,
+  ArrowLeft,
+} from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import Field from "../formField";
@@ -45,123 +64,219 @@ const PatientFields = ({
 
   const togglePasswordVisibility = () => setIsPasswordVisible((prev) => !prev);
   const toggleConfirmVisibility = () => setIsConfirmVisible((prev) => !prev);
-  console.log(form);
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full p-2 ">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <Field form={form} name={"name"} label={"Name"} />
-          <Field form={form} name={"email"} label={"Email"} />
-          <Field form={form} data={sex} name={"sex"} label={"Sex"} />
-          <FormField
-            control={form.control}
-            name="phoneNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <div className="relative ml-auto flex-1 md:grow-0">
-                    <p className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground text-sm">
-                      (+639)
-                    </p>
-                    <Input
-                      type="number"
-                      className="w-full rounded-lg bg-background pl-16 input-no-spin "
-                      {...field}
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
-          <PasswordInput form={form} name={"password"} label={"Password"} />
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+  return (
+    <Card className="w-full mx-auto shadow-lg">
+      <CardHeader className="space-y-1">
+        <div className="flex items-center">
+          <Link
+            href="/login"
+            className="absolute text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+          >
+            <ArrowLeft size={16} />
+            <span>Back to Login</span>
+          </Link>
+        </div>
+        <CardTitle className="text-2xl font-bold text-center mt-8">
+          Patient Registration
+        </CardTitle>
+        <CardDescription className="text-center">
+          Enter your information to create an account
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Personal Information Section */}
+              <div className="space-y-4">
                 <div className="relative">
-                  <FormControl>
-                    <Input
-                      id="confirmPassword"
-                      className="pe-9"
-                      placeholder="Confirm Password"
-                      type={isConfirmVisible ? "text" : "password"}
-                      {...field}
-                    />
-                  </FormControl>
-                  <button
-                    className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg text-muted-foreground/80 ring-offset-background transition-shadow hover:text-foreground focus-visible:border focus-visible:border-ring focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                    type="button"
-                    onClick={toggleConfirmVisibility}
-                    aria-label={
-                      isConfirmVisible ? "Hide password" : "Show password"
-                    }
-                    aria-pressed={isConfirmVisible}
-                  >
-                    {isConfirmVisible ? (
-                      <EyeOff size={16} strokeWidth={2} aria-hidden="true" />
-                    ) : (
-                      <Eye size={16} strokeWidth={2} aria-hidden="true" />
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <User size={16} />
+                          Name
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            className="pl-3"
+                            placeholder="Enter your full name"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </button>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="dob"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date of Birth</FormLabel>
-                <FormControl>
-                  <Input
-                    type="date"
-                    value={
-                      field.value instanceof Date &&
-                      !isNaN(field.value.getTime())
-                        ? field.value.toISOString().split("T")[0]
-                        : ""
-                    }
-                    onChange={(e) => {
-                      const date = e.target.value
-                        ? new Date(e.target.value)
-                        : null;
-                      field.onChange(date);
-                    }}
-                    max={new Date().toISOString().split("T")[0]}
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Maps field={field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting} variant="outline">
-            {next ? "Next" : isSubmitting ? "Submitting..." : "Submit"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+                </div>
+
+                <div className="relative">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Mail size={16} />
+                          Email
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            className="pl-3"
+                            placeholder="Enter your email"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <Field form={form} data={sex} name="sex" label="Sex" />
+
+                <FormField
+                  control={form.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Phone size={16} />
+                        Phone Number
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                            (+639)
+                          </div>
+                          <Input
+                            type="number"
+                            className="pl-16 input-no-spin"
+                            placeholder="Enter phone number"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Additional Information Section */}
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="dob"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Calendar size={16} />
+                        Date of Birth
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          className="pl-3"
+                          value={
+                            field.value instanceof Date &&
+                            !isNaN(field.value.getTime())
+                              ? field.value.toISOString().split("T")[0]
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const date = e.target.value
+                              ? new Date(e.target.value)
+                              : null;
+                            field.onChange(date);
+                          }}
+                          max={new Date().toISOString().split("T")[0]}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <MapPin size={16} />
+                        Address
+                      </FormLabel>
+                      <FormControl>
+                        <Maps field={field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <PasswordInput form={form} name="password" label="Password" />
+
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Lock size={16} />
+                        Confirm Password
+                      </FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <Input
+                            className="pr-10"
+                            placeholder="Confirm your password"
+                            type={isConfirmVisible ? "text" : "password"}
+                            {...field}
+                          />
+                        </FormControl>
+                        <button
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                          type="button"
+                          onClick={toggleConfirmVisibility}
+                        >
+                          {isConfirmVisible ? (
+                            <EyeOff
+                              size={16}
+                              className="text-muted-foreground"
+                            />
+                          ) : (
+                            <Eye size={16} className="text-muted-foreground" />
+                          )}
+                        </button>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <CardFooter className="flex justify-end pt-6">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="min-w-32 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {next
+                  ? "Next"
+                  : isSubmitting
+                    ? "Submitting..."
+                    : "Create Account"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 

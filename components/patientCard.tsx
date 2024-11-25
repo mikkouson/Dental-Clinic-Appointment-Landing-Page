@@ -20,6 +20,12 @@ import {
   Ticket,
   CircleEllipsis,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import useSWR from "swr";
 import { EditAppointment } from "./editAppointment";
 import { cancelAppointment, signOut } from "@/app/actions";
@@ -71,11 +77,12 @@ export default function BlackWhiteYellowPatientCard() {
       ? data.appointments[data.appointments.length - 1]
       : null;
 
-  // Check if there are any pending appointments
+  // Check if there are any pending appointments or pending reschedules
   const hasPendingAppointment = data?.appointments?.some(
     (appointment: any) =>
       appointment.status.id === 1 || // Pending
-      appointment.status.id === 2 // Confirmed
+      appointment.status.id === 2 || // Confirmed
+      appointment.status.id === 6 // Pending Reschedule
   );
 
   const handleCancel = async () => {
@@ -162,15 +169,33 @@ export default function BlackWhiteYellowPatientCard() {
             >
               Sign Out
             </SubmitButton>
-            {!hasPendingAppointment && (
-              <DrawerDialogDemo
-                open={open}
-                setOpen={setOpen}
-                label={"New Appointment"}
-              >
-                <AppointmentFields form={form} onSubmit={onSubmit} />
-              </DrawerDialogDemo>
-            )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-block">
+                    <DrawerDialogDemo
+                      open={open}
+                      setOpen={setOpen}
+                      label={"New Appointment"}
+                      disabled={hasPendingAppointment}
+                      className={cn(
+                        hasPendingAppointment && "cursor-not-allowed opacity-50"
+                      )}
+                    >
+                      <AppointmentFields form={form} onSubmit={onSubmit} />
+                    </DrawerDialogDemo>
+                  </div>
+                </TooltipTrigger>
+                {hasPendingAppointment && (
+                  <TooltipContent className="bg-gray-800 text-white p-2 rounded">
+                    <p>
+                      Cannot create new appointment while you have pending,
+                      confirmed, or pending reschedule appointments
+                    </p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </form>
         </div>
 

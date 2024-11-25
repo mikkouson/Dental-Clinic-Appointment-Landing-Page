@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { login } from "./action";
+import Link from "next/link";
 export default function Login({
   searchParams,
 }: {
@@ -80,6 +81,14 @@ export default function Login({
               >
                 Login
               </SubmitButton>
+              <div className="text-center">
+                <p className="text-sm">
+                  Don't have an account?{" "}
+                  <Link href="/register" className="underline">
+                    Register
+                  </Link>
+                </p>
+              </div>
               <div className="text-center text-red-500">
                 {(searchParams && searchParams.message) ?? ""}
               </div>

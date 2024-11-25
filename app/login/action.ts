@@ -12,11 +12,30 @@ export async function login(formData: FormData) {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
   };
-  const { error } = await supabase.auth.signInWithPassword(data);
+
+  // Attempt to sign in
+  const { data: signInData, error } =
+    await supabase.auth.signInWithPassword(data);
 
   if (error) {
-    redirect("login?message=  Invalid  password or email please try again.");
+    redirect("/login?message=Invalid password or email please try again.");
   }
+
+  // Check if sign in was successful and user exists
+  if (!signInData?.user) {
+    redirect("/login?message=Unable to retrieve user data.");
+  }
+
+  // Check if user has the correct role
+  const userRole = signInData.user.user_metadata?.role;
+
+  if (userRole !== "patient") {
+    // Sign out the user since they don't have the correct role
+    await supabase.auth.signOut();
+    redirect("/login?message=Access denied. This portal is for patients only.");
+  }
+
+  // If all checks pass, proceed with login
   revalidatePath("/", "layout");
   redirect("/dashboard");
 }

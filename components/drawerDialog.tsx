@@ -22,6 +22,7 @@ import {
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ScrollArea } from "./ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface DrawerDialogDemoProps {
   open: boolean;
@@ -29,6 +30,8 @@ interface DrawerDialogDemoProps {
   label: string;
   children: React.ReactNode;
   title?: boolean;
+  disabled?: boolean;
+  className?: string;
 }
 
 export function DrawerDialogDemo({
@@ -37,22 +40,42 @@ export function DrawerDialogDemo({
   label,
   children,
   title = true,
+  disabled = false,
+  className,
 }: DrawerDialogDemoProps) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
+
   useEffect(() => {
     setTimeout(() => (document.body.style.pointerEvents = ""), 0);
   });
+
+  const handleTriggerClick = (e: React.MouseEvent) => {
+    if (disabled) {
+      e.preventDefault();
+      return;
+    }
+  };
+
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button className="bg-yellow-200 hover:bg-yellow-100" size="sm">
-            <Plus size={20} className="mr-2 " />
+          <Button
+            className={cn(
+              "bg-yellow-200 hover:bg-yellow-100",
+              disabled && "opacity-50 cursor-not-allowed hover:bg-yellow-200",
+              className
+            )}
+            size="sm"
+            disabled={disabled}
+            onClick={handleTriggerClick}
+          >
+            <Plus size={20} className="mr-2" />
             {label}
           </Button>
         </DialogTrigger>
         <DialogContent
-          className={"lg:max-w-screen-lg overflow-y-auto max-h-screen"}
+          className="lg:max-w-screen-lg overflow-y-auto max-h-screen"
           onInteractOutside={(e) => {
             const hasPacContainer = e.composedPath().some((el: EventTarget) => {
               if ("classList" in el) {
@@ -70,9 +93,6 @@ export function DrawerDialogDemo({
         >
           <DialogHeader>
             {title && <DialogTitle>{label}</DialogTitle>}
-            {/* <DialogDescription>
-              Make changes to your profile here. Click save when youre done.
-            </DialogDescription> */}
           </DialogHeader>
           {children}
         </DialogContent>
@@ -83,7 +103,15 @@ export function DrawerDialogDemo({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button className="bg-primary text-xs p-0  sm:text-sm px-2 sm:px-4">
+        <Button
+          className={cn(
+            "bg-primary text-xs p-0 sm:text-sm px-2 sm:px-4",
+            disabled && "opacity-50 cursor-not-allowed",
+            className
+          )}
+          disabled={disabled}
+          onClick={handleTriggerClick}
+        >
           <Plus size={14} />
         </Button>
       </DrawerTrigger>
@@ -110,7 +138,7 @@ export function DrawerDialogDemo({
             Make changes to your profile here. Click save when youre done.
           </DrawerDescription>
         </DrawerHeader>
-        <ScrollArea className="h-[50vh] w-full ">{children}</ScrollArea>
+        <ScrollArea className="h-[50vh] w-full">{children}</ScrollArea>
 
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>

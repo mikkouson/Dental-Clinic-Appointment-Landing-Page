@@ -50,28 +50,8 @@ export function NewPatientForm() {
   }
 
   return (
-    <div className="w-full">
-      <div className="w-full">
-        <h2 className="text-2xl font-bold mb-2">Patient Information</h2>
-        <p className="text-muted-foreground mb-4">
-          Enter patient's personal details
-        </p>
-        <Button
-          variant="outline"
-          onClick={() => {
-            toast({
-              title: "Scheduled: Catch up ",
-              description: "Friday, February 10, 2023 at 5:57 PM",
-              action: (
-                <ToastAction altText="Goto schedule to undo">Undo</ToastAction>
-              ),
-            });
-          }}
-        >
-          Add to calendar
-        </Button>
-        <PatientFields form={form} onSubmit={onSubmit} />
-      </div>
+    <div className="w-full py-10">
+      <PatientFields form={form} onSubmit={onSubmit} />
     </div>
   );
 }
