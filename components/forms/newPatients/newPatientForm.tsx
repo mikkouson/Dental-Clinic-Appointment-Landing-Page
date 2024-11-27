@@ -49,8 +49,8 @@ export function NewPatientForm() {
         duration: 3000,
       });
 
-      router.push("/login");
-      form.reset();
+      // router.push("/login");
+      // form.reset();
     } catch (error: any) {
       toast({
         className: cn(

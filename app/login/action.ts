@@ -71,3 +71,17 @@ export async function loginWithGoogle() {
     return redirect(data.url);
   }
 }
+
+export async function resetPassword(email: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/reset-password`,
+  });
+
+  if (error) {
+    return { error: "Error sending reset link. Please try again." };
+  }
+
+  return { success: "Password reset link sent to your email." };
+}

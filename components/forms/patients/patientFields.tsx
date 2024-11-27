@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import DatePicker from "./dateField";
 import TimePicker from "./timeField";
 import LoadingSkeleton from "@/components/skeleton";
+import { useAppointments } from "@/components/hooks/useAppointment";
+import TomorrowBranchSlots from "@/components/tommorowbranchslot";
 
 interface Address {
   id: number;
@@ -214,18 +216,17 @@ const AppointmentFields = ({ form, onSubmit }: AppointmentFieldsProps) => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full p-2">
         <AppointmentStepper currentStep={currentStep + 1} />
-
         {currentStep === 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {branches?.map((branch, index) => (
               <div
                 key={branch.id}
-                className="max-w-xs w-full group/card"
+                className="w-full group/card"
                 onClick={() => handleBranchSelect(branch.id)}
               >
                 <div
                   className={cn(
-                    "relative card h-96 rounded-md shadow-xl max-w-sm mx-auto flex flex-col justify-between p-4 cursor-pointer overflow-hidden",
+                    "relative card h-64  md:h-96 rounded-md shadow-xl w-full flex flex-col justify-between p-4 cursor-pointer overflow-hidden",
                     selectedBranchId === branch.id
                       ? "ring-4 ring-yellow-500"
                       : "",
@@ -245,11 +246,11 @@ const AppointmentFields = ({ form, onSubmit }: AppointmentFieldsProps) => {
                       backgroundImage: `linear-gradient(to bottom right, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0)), url(${branchImages[index % branchImages.length]})`,
                     }}
                   />
-                  <div className="absolute inset-0 bg-black opacity-20 transition-all duration-300 group-hover/card:opacity-20"></div>
+                  <div className="absolute inset-0 bg-black opacity-20 transition-all duration-300 group-hover/card:opacity-20" />
 
-                  <div className="relative z-10 text content">
+                  <div className="relative z-10 text-content space-y-2">
                     <div className="flex items-center justify-between">
-                      <h1 className="font-bold text-xl md:text-2xl text-gray-50">
+                      <h1 className="font-bold text-lg md:text-xl text-gray-50">
                         {branch.name}
                       </h1>
                       {nearestBranchId === branch.id && (
@@ -270,6 +271,7 @@ const AppointmentFields = ({ form, onSubmit }: AppointmentFieldsProps) => {
                       {travelData.find((d) => d.branchId === branch.id)
                         ?.distance || "Calculating..."}
                     </p>
+                    <TomorrowBranchSlots branchId={branch.id} />
                   </div>
                 </div>
               </div>
@@ -310,7 +312,7 @@ const AppointmentFields = ({ form, onSubmit }: AppointmentFieldsProps) => {
         )}
 
         {currentStep === 2 && (
-          <div className="flex">
+          <div className="flex flex-col md:flex-row items-center ">
             <DatePicker form={form} name="date" />
             <div className="w-full ml-8">
               {selectedBranchId && (

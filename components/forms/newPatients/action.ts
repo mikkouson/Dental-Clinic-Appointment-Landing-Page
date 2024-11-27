@@ -41,24 +41,25 @@ export async function createNewUser(
   const supabase = createAdminClient();
 
   try {
-    const { data, error } = await supabase.auth.admin.createUser({
+    const { data, error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
-      user_metadata: {
-        name: formData.name,
-        role: "patient",
-        address: {
-          address: formData.address.address,
-          latitude: formData.address.latitude,
-          longitude: formData.address.longitude,
+      options: {
+        data: {
+          name: formData.name,
+          role: "patient",
+          address: {
+            address: formData.address.address,
+            latitude: formData.address.latitude,
+            longitude: formData.address.longitude,
+          },
+          staus: "Active",
+          phoneNumber: formData.phoneNumber,
+          email: formData.email,
+          sex: formData.sex,
+          dob: formData.dob,
         },
-        phoneNumber: formData.phoneNumber,
-        email: formData.email,
-        sex: formData.sex,
-        dob: formData.dob,
       },
-      email_confirm: true,
-      role: "authenticated",
     });
 
     if (error) {

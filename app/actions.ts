@@ -352,6 +352,6 @@ export async function signOut() {
     redirect("/error");
   } else {
     revalidatePath("/", "layout");
-    redirect("/login");
+    // redirect("/login");
   }
 }
