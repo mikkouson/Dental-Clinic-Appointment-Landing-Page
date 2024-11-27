@@ -12,9 +12,14 @@ export async function GET(req: NextRequest) {
     .select(
       `
       *,
-      appointments(*)
+      appointments(*,
+        patients(*)
+      )
     `
     )
+
+    .is("appointments.deleteOn", null)
+    .is("appointments.patients.deleteOn", null)
     .eq("appointments.date", date)
     .eq("appointments.branch", branch);
 

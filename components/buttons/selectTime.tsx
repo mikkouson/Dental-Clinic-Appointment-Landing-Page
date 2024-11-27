@@ -1,14 +1,14 @@
 import React from "react";
-import useSWR from "swr";
-import moment from "moment";
 import { Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
-// Define proper types for the API response
 interface TimeSlot {
   id: number;
   time: string;
-  appointments: any[];
+  appointments: Array<{
+    id: number;
+    status: number;
+    // other appointment properties...
+  }>;
 }
 
 interface TimeSlotProps {
@@ -20,30 +20,59 @@ interface TimeSlotProps {
   };
 }
 
-const fetcher = async (url: string): Promise<TimeSlot[]> => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to fetch time slots");
-  }
-  const data = await response.json();
-  // Ensure the response is an array
-  if (!Array.isArray(data)) {
-    throw new Error("Invalid response format");
-  }
-  return data;
+const formatTime = (time: string): string => {
+  const date = new Date(`1970/01/01 ${time}`);
+  return date
+    .toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    })
+    .replace(/\s+/g, "");
 };
 
 export default function TimeSlot({ branch, field, date }: TimeSlotProps) {
-  const dates = moment(date).format("MM/DD/YYYY");
-  const { data, error, isLoading } = useSWR<TimeSlot[], Error>(
-    `/api/timeslots?date=${dates}&branch=${branch}`,
-    fetcher
-  );
+  const [data, setData] = React.useState<TimeSlot[] | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<Error | null>(null);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const formattedDate = date.toLocaleDateString("en-US", {
+          month: "2-digit",
+          day: "2-digit",
+          year: "numeric",
+        });
+
+        const response = await fetch(
+          `/api/timeslots?date=${formattedDate}&branch=${branch}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch time slots");
+        }
+        const jsonData = await response.json();
+        if (!Array.isArray(jsonData)) {
+          throw new Error("Invalid response format");
+        }
+        setData(jsonData);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error("Failed to load time slots")
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [date, branch]);
 
   if (error) {
     return (
       <div className="p-4 text-red-500 bg-red-50 rounded-lg">
-        Error: {error.message || "Failed to load time slots"}
+        Error: {error.message}
       </div>
     );
   }
@@ -51,14 +80,13 @@ export default function TimeSlot({ branch, field, date }: TimeSlotProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-4">
-        <Loader2 className="animate-spin" />
+        <Loader2 className="h-5 w-5 animate-spin" />
         <p className="ml-2">Loading time slots...</p>
       </div>
     );
   }
 
-  // Additional check to ensure data exists and is an array
-  if (!data || !Array.isArray(data)) {
+  if (!data) {
     return (
       <div className="p-4 text-yellow-500 bg-yellow-50 rounded-lg">
         No time slots available
@@ -66,52 +94,61 @@ export default function TimeSlot({ branch, field, date }: TimeSlotProps) {
     );
   }
 
-  const isToday = moment(date).isSame(new Date(), "day");
-  const currentTime = moment();
+  const isToday = new Date(date).toDateString() === new Date().toDateString();
+  const currentTime = new Date();
 
   const handleSelect = (id: number) => {
     field.onChange(id);
   };
 
   return (
-    <div className="grid grid-cols-1 gap-1">
+    <div className="grid grid-cols-1 gap-2">
       {data.map((slot: TimeSlot) => {
-        const patientCount = slot.appointments.length;
+        // Filter out appointments with status 3 and 5
+        const validAppointments = slot.appointments.filter(
+          (apt) => apt.status !== 3 && apt.status !== 5 && apt.status !== 4
+        );
+
+        const patientCount = validAppointments.length;
         const slotsUsed = Math.min(1, patientCount);
         const remainingSlots = 1 - slotsUsed;
-        const slotTime = moment(slot.time, "h:mm A");
-        const isPastTime = isToday && slotTime.isBefore(currentTime);
+        const slotTime = new Date(`1970/01/01 ${slot.time}`);
+        const isPastTime =
+          isToday && slotTime.getTime() < currentTime.getTime();
+
+        const isSelected = field.value === slot.id;
+        const isDisabled = remainingSlots === 0 || isPastTime;
 
         return (
           <div
             key={slot.id}
-            className={cn(
-              "flex justify-between p-2 rounded-lg border cursor-pointer transition-all duration-200",
-              field.value === slot.id
-                ? "bg-blue-100 border-blue-500"
-                : "bg-white border-gray-300 hover:bg-gray-50",
-              remainingSlots === 0 || isPastTime
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:border-blue-300"
-            )}
-            onClick={() =>
-              remainingSlots > 0 && !isPastTime && handleSelect(slot.id)
-            }
+            className={`
+              flex justify-between items-center p-3 rounded-lg border transition-all duration-200
+              ${isSelected ? "bg-blue-50 border-blue-500" : "bg-white border-gray-200 hover:bg-gray-50"}
+              ${isDisabled ? "opacity-50 cursor-not-allowed" : "hover:border-blue-300 cursor-pointer"}
+            `}
+            onClick={() => !isDisabled && handleSelect(slot.id)}
             role="button"
             tabIndex={0}
-            aria-disabled={remainingSlots === 0 || isPastTime}
+            aria-disabled={isDisabled}
           >
-            <span className="font-medium">{slot.time}</span>
-            <span
-              className={cn(
-                "text-sm",
-                remainingSlots === 0 ? "text-red-500" : "text-gray-600"
-              )}
-            >
-              {slotsUsed} / 1 Slots Taken
-              {remainingSlots === 0 && " (Full)"}
-              {isPastTime && " (Past)"}
+            <span className="font-medium text-gray-900">
+              {formatTime(slot.time)}
             </span>
+            <div className="flex items-center space-x-2">
+              <span
+                className={`
+                  text-sm
+                  ${remainingSlots === 0 ? "text-red-500" : ""}
+                  ${isPastTime ? "text-gray-400" : ""}
+                  ${!isDisabled ? "text-gray-600" : ""}
+                `}
+              >
+                {slotsUsed}/1 Slots
+                {remainingSlots === 0 && " (Full)"}
+                {isPastTime && " (Past)"}
+              </span>
+            </div>
           </div>
         );
       })}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -19,6 +19,7 @@ import {
   BriefcaseMedical,
   Ticket,
   CircleEllipsis,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import {
   Tooltip,
@@ -40,13 +41,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AppointmentFormValues, AppointmentSchema } from "@/app/types";
 import { z } from "zod";
 import { newApp } from "@/app/dashboard/action";
+import CancelConfirmationDialog from "./cancelAppointment";
 
 const fetcher = (url: string): Promise<any> =>
   fetch(url).then((res) => res.json());
 
 export default function BlackWhiteYellowPatientCard() {
   const [open, setOpen] = useState(false);
-
   const form = useForm<z.infer<typeof AppointmentSchema>>({
     resolver: zodResolver(AppointmentSchema),
     mode: "onChange",
@@ -59,11 +60,10 @@ export default function BlackWhiteYellowPatientCard() {
     `/api/patientdetails`,
     fetcher
   );
+
   useEffect(() => {
     if (data?.id) {
       form.setValue("patient_id", Number(data.id));
-
-      // Set address related fields if they exist in the data
       if (data.address) {
         form.setValue("address", {
           id: data.address.id,
@@ -81,12 +81,17 @@ export default function BlackWhiteYellowPatientCard() {
       <div className="text-gray-800">Error loading appointment details</div>
     );
 
-  const latestAppointment =
-    data?.appointments?.length > 0
-      ? data.appointments[data.appointments.length - 1]
-      : null;
+  // Find the latest appointment based on updated_at timestamp
+  const latestAppointment = data?.appointments?.reduce(
+    (latest: any, current: any) => {
+      if (!latest) return current;
+      const latestDate = new Date(latest.updated_at);
+      const currentDate = new Date(current.updated_at);
+      return currentDate > latestDate ? current : latest;
+    },
+    null
+  );
 
-  // Check if there are any pending appointments or pending reschedules
   const hasPendingAppointment = data?.appointments?.some(
     (appointment: any) =>
       appointment.status.id === 1 || // Pending
@@ -137,7 +142,7 @@ export default function BlackWhiteYellowPatientCard() {
         variant: "success",
         duration: 2000,
       });
-
+      form.reset();
       mutate();
     } catch (error) {
       toast({
@@ -146,6 +151,7 @@ export default function BlackWhiteYellowPatientCard() {
         variant: "destructive",
         duration: 2000,
       });
+      form.reset();
     }
   };
 
@@ -185,7 +191,7 @@ export default function BlackWhiteYellowPatientCard() {
                     <DrawerDialogDemo
                       open={open}
                       setOpen={setOpen}
-                      label={"New Appointment"}
+                      label="New Appointment"
                       disabled={hasPendingAppointment}
                       className={cn(
                         hasPendingAppointment && "cursor-not-allowed opacity-50"
@@ -209,62 +215,97 @@ export default function BlackWhiteYellowPatientCard() {
         </div>
 
         <TabsContent value="details">
-          {latestAppointment && (
-            <Card className="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
-              <CardHeader className="bg-yellow-50 text-gray-800 p-6 border-b border-yellow-200">
-                <CardTitle className="text-2xl font-bold">
-                  Latest Appointment Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-6">
-                <div className="flex flex-col md:flex-row md:space-x-6">
-                  <div className="flex-1 space-y-4">
-                    <DetailItem icon={User} label="Patient" value={data.name} />
-                    <DetailItem
-                      icon={Phone}
-                      label="Contact"
-                      value={`(+639) ${data.phone_number}`}
+          <Card className="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
+            <CardHeader className="bg-yellow-50 text-gray-800 p-6 border-b border-yellow-200">
+              <CardTitle className="text-2xl font-bold">
+                Latest Updated Appointment Details
+              </CardTitle>
+              {latestAppointment && (
+                <div className="text-sm text-gray-600">
+                  Last updated:{" "}
+                  {new Date(latestAppointment.updated_at).toLocaleString()}
+                </div>
+              )}
+            </CardHeader>
+            <CardContent className="p-6">
+              {latestAppointment ? (
+                <div className="space-y-6">
+                  <div className="flex flex-col md:flex-row md:space-x-6">
+                    <div className="flex-1 space-y-4">
+                      <DetailItem
+                        icon={User}
+                        label="Patient"
+                        value={data.name}
+                      />
+                      <DetailItem
+                        icon={Phone}
+                        label="Contact"
+                        value={`(+639) ${data.phone_number}`}
+                      />
+                      <DetailItem
+                        icon={Calendar}
+                        label="Date"
+                        value={latestAppointment.date}
+                      />
+                      <DetailItem
+                        icon={Clock}
+                        label="Time"
+                        value={latestAppointment.time_slots.time}
+                      />
+                    </div>
+                    <Separator
+                      orientation="vertical"
+                      className="hidden md:block bg-yellow-200"
                     />
-                    <DetailItem
-                      icon={Calendar}
-                      label="Date"
-                      value={latestAppointment.date}
-                    />
-                    <DetailItem
-                      icon={Clock}
-                      label="Time"
-                      value={latestAppointment.time_slots.time}
-                    />
-                  </div>
-                  <Separator
-                    orientation="vertical"
-                    className="hidden md:block bg-yellow-200"
-                  />
-                  <div className="flex-1 space-y-4 mt-4 md:mt-0">
-                    <DetailItem
-                      icon={BriefcaseMedical}
-                      label="Service"
-                      value={latestAppointment.services.name}
-                    />
-                    <DetailItem
-                      icon={MapPin}
-                      label="Location"
-                      value={latestAppointment.branch.address}
-                    />
-                    <DetailItem
-                      icon={CircleEllipsis}
-                      label="Status"
-                      value={latestAppointment.status.name}
-                    />
-                    <DetailItem
-                      icon={Ticket}
-                      label="Type"
-                      value={latestAppointment.type}
-                    />
+                    <div className="flex-1 space-y-4 mt-4 md:mt-0">
+                      <DetailItem
+                        icon={BriefcaseMedical}
+                        label="Service"
+                        value={latestAppointment.services.name}
+                      />
+                      <DetailItem
+                        icon={MapPin}
+                        label="Location"
+                        value={latestAppointment.branch.address}
+                      />
+                      <DetailItem
+                        icon={CircleEllipsis}
+                        label="Status"
+                        value={latestAppointment.status.name}
+                      />
+                      <DetailItem
+                        icon={Ticket}
+                        label="Type"
+                        value={latestAppointment.type}
+                      />
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-              <CardFooter className="bg-gray-50 p-6 flex flex-col sm:flex-row justify-end items-center space-y-2 sm:space-y-0">
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                  <CalendarIcon className="w-16 h-16 mb-4 text-yellow-500" />
+                  <h3 className="text-xl font-medium mb-2">
+                    No Recent Appointments
+                  </h3>
+                  <p className="text-center mb-6">
+                    You haven't scheduled any appointments yet. Click the "New
+                    Appointment" button above to schedule your first
+                    appointment.
+                  </p>
+                  <DrawerDialogDemo
+                    open={open}
+                    setOpen={setOpen}
+                    label="Schedule Now"
+                    disabled={false}
+                    className="px-6 py-2 rounded-md"
+                  >
+                    <AppointmentFields form={form} onSubmit={onSubmit} />
+                  </DrawerDialogDemo>
+                </div>
+              )}
+            </CardContent>
+            {latestAppointment && (
+              <CardFooter className="bg-gray-50 p-6 flex flex-col sm:flex-row justify-end items-center space-y-2 sm:space-y-0 gap-2">
                 {(latestAppointment.status.id === 1 ||
                   latestAppointment.status.id === 2) && (
                   <EditAppointment
@@ -277,21 +318,15 @@ export default function BlackWhiteYellowPatientCard() {
                 {(latestAppointment.status.id === 1 ||
                   latestAppointment.status.id === 2 ||
                   latestAppointment.status.id === 6) && (
-                  <form>
-                    <SubmitButton
-                      variant="destructive"
-                      className="ml-2"
-                      formAction={handleCancel}
-                      pendingText="Cancelling Appointment"
-                      size="sm"
-                    >
-                      Cancel Appointment
-                    </SubmitButton>
-                  </form>
+                  <CancelConfirmationDialog
+                    onConfirm={handleCancel}
+                    appointmentDate={latestAppointment.date}
+                    appointmentTime={latestAppointment.time_slots.time}
+                  />
                 )}
               </CardFooter>
-            </Card>
-          )}
+            )}
+          </Card>
         </TabsContent>
 
         <TabsContent value="appointments">

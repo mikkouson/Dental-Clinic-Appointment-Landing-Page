@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import DatePicker from "./dateField";
 import TimePicker from "./timeField";
 import LoadingSkeleton from "@/components/skeleton";
+import { useAppointments } from "@/components/hooks/useAppointment";
 
 interface Address {
   id: number;
@@ -214,7 +215,6 @@ const AppointmentFields = ({ form, onSubmit }: AppointmentFieldsProps) => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full p-2">
         <AppointmentStepper currentStep={currentStep + 1} />
-
         {currentStep === 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {branches?.map((branch, index) => (
