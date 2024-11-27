@@ -133,18 +133,12 @@ export function DrawerDialogDemo({
         }}
       >
         <DrawerHeader className="text-left">
-          <DrawerTitle>Edit profile</DrawerTitle>
-          <DrawerDescription>
-            Make changes to your profile here. Click save when youre done.
-          </DrawerDescription>
+          <DrawerTitle>New Appointment</DrawerTitle>
+          <DrawerDescription></DrawerDescription>
         </DrawerHeader>
         <ScrollArea className="h-[50vh] w-full">{children}</ScrollArea>
 
-        <DrawerFooter className="pt-2">
-          <DrawerClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DrawerClose>
-        </DrawerFooter>
+        <DrawerFooter className="pt-2"></DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

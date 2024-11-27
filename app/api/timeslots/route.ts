@@ -6,8 +6,7 @@ export async function GET(req: NextRequest) {
   const date = req.nextUrl.searchParams.get("date");
   const branch = req.nextUrl.searchParams.get("branch");
 
-  // Call the Supabase function
-  let { data, error } = await supabase
+  let query = supabase
     .from("time_slots")
     .select(
       `
@@ -17,18 +16,21 @@ export async function GET(req: NextRequest) {
       )
     `
     )
-
     .is("appointments.deleteOn", null)
     .is("appointments.patients.deleteOn", null)
-    .eq("appointments.date", date)
-    .eq("appointments.branch", branch);
+    .eq("appointments.date", date);
 
-  // Check for errors
+  // Add branch filter only if branch parameter is provided
+  if (branch) {
+    query = query.eq("appointments.branch", branch);
+  }
+
+  const { data, error } = await query;
+
   if (error) {
     console.error("Supabase error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Return data
   return NextResponse.json(data);
 }

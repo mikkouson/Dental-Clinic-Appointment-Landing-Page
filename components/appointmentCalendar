@@ -1,0 +1,122 @@
+import React, { useMemo } from 'react';
+import { Calendar } from '@/components/ui/calendar';
+import moment from 'moment-timezone';
+import { cn } from '@/lib/utils';
+
+const FULLBOOKED_THRESHOLD = 8;
+const BUSY_THRESHOLD = 4;
+const EXCLUDED_STATUSES = ["Reject", "Canceled", "Completed"];
+
+const AppointmentCalendar = ({ appointments, selectedDate, onDateSelect }) => {
+  const {
+    appointmentCounts,
+    fullBookedDates,
+    appointmentsByDateAndTime
+  } = useMemo(() => {
+    if (!appointments) {
+      return {
+        appointmentCounts: new Map(),
+        fullBookedDates: new Set(),
+        appointmentsByDateAndTime: new Map()
+      };
+    }
+
+    const countMap = new Map();
+    const fullbooked = new Set();
+    const dateTimeMap = new Map();
+
+    appointments.forEach((appointment) => {
+      if (!appointment.date || !appointment.status?.name) return;
+
+      const dateInPHT = moment(appointment.date).tz("Asia/Manila");
+      const dateKey = dateInPHT.format("YYYY-MM-DD");
+
+      if (EXCLUDED_STATUSES.includes(appointment.status.name)) return;
+
+      const count = (countMap.get(dateKey) || 0) + 1;
+      countMap.set(dateKey, count);
+
+      if (count >= FULLBOOKED_THRESHOLD) {
+        fullbooked.add(dateKey);
+      }
+
+      if (!dateTimeMap.has(dateKey)) {
+        dateTimeMap.set(dateKey, new Set());
+      }
+      dateTimeMap.get(dateKey).add(appointment.time);
+    });
+
+    return {
+      appointmentCounts: countMap,
+      fullBookedDates: fullbooked,
+      appointmentsByDateAndTime: dateTimeMap
+    };
+  }, [appointments]);
+
+  return (
+    <div className="flex flex-col space-y-4">
+      <Calendar
+        mode="single"
+        selected={selectedDate}
+        defaultMonth={selectedDate || moment().tz("Asia/Manila").toDate()}
+        onSelect={(date) => {
+          if (date) {
+            const dateInPHT = moment(date).tz("Asia/Manila");
+            onDateSelect(dateInPHT.toDate());
+          }
+        }}
+        initialFocus
+        modifiers={{
+          fullbooked: (date) => {
+            const currentDate = moment().tz("Asia/Manila");
+            if (moment(date).isBefore(currentDate)) return false;
+            const dateString = moment(date).tz("Asia/Manila").format("YYYY-MM-DD");
+            return fullBookedDates.has(dateString);
+          },
+          busy: (date) => {
+            const currentDate = moment().tz("Asia/Manila");
+            if (moment(date).isBefore(currentDate)) return false;
+            const dateString = moment(date).tz("Asia/Manila").format("YYYY-MM-DD");
+            const count = appointmentCounts.get(dateString);
+            return count >= BUSY_THRESHOLD && count < FULLBOOKED_THRESHOLD;
+          }
+        }}
+        modifiersClassNames={{
+          fullbooked: "bg-red-200 text-red-900 font-semibold",
+          busy: "bg-orange-200 text-orange-900",
+          selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground"
+        }}
+        disabled={(date) => {
+          const currentDate = moment().tz("Asia/Manila");
+          const maxDate = moment().tz("Asia/Manila").add(29, "days");
+          const dateInPHT = moment(date).tz("Asia/Manila");
+          const dateString = dateInPHT.format("YYYY-MM-DD");
+          const isFullbooked = fullBookedDates.has(dateString);
+
+          return (
+            dateInPHT.isBefore(currentDate) ||
+            dateInPHT.isAfter(maxDate) ||
+            isFullbooked
+          );
+        }}
+        className={cn(
+          "rounded-md border shadow",
+          !selectedDate && "bg-muted"
+        )}
+      />
+
+      <div className="flex items-center gap-4 text-sm text-gray-600">
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-red-200 rounded" />
+          <span>Fully Booked</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-orange-200 rounded" />
+          <span>Busy</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AppointmentCalendar;

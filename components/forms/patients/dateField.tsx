@@ -188,7 +188,8 @@ const DatePicker = ({
                 return (
                   dateInPHT.isBefore(currentDate) ||
                   dateInPHT.isAfter(maxDate) ||
-                  isFullbooked
+                  isFullbooked ||
+                  currentDate.isSame(dateInPHT, "day")
                 );
               }}
               className={cn(

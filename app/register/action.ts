@@ -32,7 +32,6 @@ export async function createNewUser(formData: PatientFormValues) {
       sex: formData.sex,
       dob: formData.dob,
     },
-    email_confirm: true,
     role: "authenticated",
   });
 

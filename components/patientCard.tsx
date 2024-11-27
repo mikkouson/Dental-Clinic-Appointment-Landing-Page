@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import {
   Card,
@@ -42,12 +41,19 @@ import { AppointmentFormValues, AppointmentSchema } from "@/app/types";
 import { z } from "zod";
 import { newApp } from "@/app/dashboard/action";
 import CancelConfirmationDialog from "./cancelAppointment";
+import LoadingSkeleton from "./patientCardSkeleton";
+import TeethChart from "./teeth-permanent";
+import ToothHistoryCard from "./toothHistoryCard";
+import { createClient } from "@/utils/supabase/client";
+import moment from "moment";
 
 const fetcher = (url: string): Promise<any> =>
   fetch(url).then((res) => res.json());
 
 export default function BlackWhiteYellowPatientCard() {
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
+
   const form = useForm<z.infer<typeof AppointmentSchema>>({
     resolver: zodResolver(AppointmentSchema),
     mode: "onChange",
@@ -74,14 +80,46 @@ export default function BlackWhiteYellowPatientCard() {
       }
     }
   }, [data, form]);
+  const supabase = createClient();
 
-  if (isLoading) return <div className="text-gray-800">Loading...</div>;
+  useEffect(() => {
+    const channel = supabase
+      .channel(`realtime tooth-history`)
+
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tooth_history" },
+        () => {
+          mutate();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments" },
+        () => {
+          mutate();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "patients" },
+        () => {
+          mutate();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, mutate]);
+
+  if (isLoading) return <LoadingSkeleton />;
   if (error)
     return (
       <div className="text-gray-800">Error loading appointment details</div>
     );
 
-  // Find the latest appointment based on updated_at timestamp
   const latestAppointment = data?.appointments?.reduce(
     (latest: any, current: any) => {
       if (!latest) return current;
@@ -94,9 +132,9 @@ export default function BlackWhiteYellowPatientCard() {
 
   const hasPendingAppointment = data?.appointments?.some(
     (appointment: any) =>
-      appointment.status.id === 1 || // Pending
-      appointment.status.id === 2 || // Confirmed
-      appointment.status.id === 6 // Pending Reschedule
+      appointment.status.id === 1 ||
+      appointment.status.id === 2 ||
+      appointment.status.id === 6
   );
 
   const handleCancel = async () => {
@@ -135,7 +173,6 @@ export default function BlackWhiteYellowPatientCard() {
 
       await newApp(dataToSubmit);
       setOpen(false);
-
       toast({
         title: "Success",
         description: "Appointment created successfully!",
@@ -157,20 +194,29 @@ export default function BlackWhiteYellowPatientCard() {
 
   return (
     <div className="w-full px-4 py-8 bg-white">
-      <Tabs defaultValue="details" className="mx-auto">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mx-auto">
         <div className="flex justify-between items-center mb-4">
           <TabsList className="bg-gray-200">
             <TabsTrigger
               value="details"
               className="data-[state=active]:bg-yellow-100 data-[state=active]:text-gray-800"
             >
-              Details
+              <Clock className="h-4 w-4 mr-2" />
+              <span className="hidden lg:inline">Latest appointment</span>
             </TabsTrigger>
             <TabsTrigger
               value="appointments"
               className="data-[state=active]:bg-yellow-100 data-[state=active]:text-gray-800"
             >
-              Appointments
+              <Calendar className="h-4 w-4 mr-2" />
+
+              <span className="hidden lg:inline">Appointments History</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="odontogram"
+              className="data-[state=active]:bg-yellow-100 data-[state=active]:text-gray-800"
+            >
+              Odontogram
             </TabsTrigger>
           </TabsList>
 
@@ -218,7 +264,7 @@ export default function BlackWhiteYellowPatientCard() {
           <Card className="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
             <CardHeader className="bg-yellow-50 text-gray-800 p-6 border-b border-yellow-200">
               <CardTitle className="text-2xl font-bold">
-                Latest Updated Appointment Details
+                Latest Appointment Details
               </CardTitle>
               {latestAppointment && (
                 <div className="text-sm text-gray-600">
@@ -250,7 +296,10 @@ export default function BlackWhiteYellowPatientCard() {
                       <DetailItem
                         icon={Clock}
                         label="Time"
-                        value={latestAppointment.time_slots.time}
+                        value={moment(
+                          latestAppointment.time_slots.time,
+                          "HH:mm:ss"
+                        ).format("h:mm A")}
                       />
                     </div>
                     <Separator
@@ -292,15 +341,18 @@ export default function BlackWhiteYellowPatientCard() {
                     Appointment" button above to schedule your first
                     appointment.
                   </p>
-                  <DrawerDialogDemo
+                  {/* <DrawerDialogDemo
                     open={open}
                     setOpen={setOpen}
-                    label="Schedule Now"
-                    disabled={false}
-                    className="px-6 py-2 rounded-md"
+                    label="New Appointment"
+                    disabled={hasPendingAppointment}
+                    className={cn(
+                      "fixed inset-0 z-50", // Add these positioning classes
+                      hasPendingAppointment && "cursor-not-allowed opacity-50"
+                    )}
                   >
                     <AppointmentFields form={form} onSubmit={onSubmit} />
-                  </DrawerDialogDemo>
+                  </DrawerDialogDemo> */}
                 </div>
               )}
             </CardContent>
@@ -338,6 +390,31 @@ export default function BlackWhiteYellowPatientCard() {
             </CardHeader>
             <CardContent className="p-6">
               <AppointmentTable data={data?.appointments} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="odontogram">
+          <Card className="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
+            <CardHeader className="bg-yellow-50 text-gray-800 p-6 border-b border-yellow-200">
+              <div className="flex items-center gap-2">
+                {/* <Tooth className="w-6 h-6 text-yellow-500" /> */}
+                <CardTitle className="text-2xl font-bold">
+                  Dental Chart
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 flex gap-4 flex-col md:flex-row justify-center items-center">
+              <div>
+                <TeethChart history={data.tooth_history} />
+              </div>{" "}
+              {data?.tooth_history && data.tooth_history.length > 0 ? (
+                <ToothHistoryCard history={data.tooth_history} />
+              ) : (
+                <div className="text-center text-gray-500 flex items-center justify-center w-full">
+                  No tooth history available.
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
