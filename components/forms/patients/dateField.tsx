@@ -154,7 +154,7 @@ const DatePicker = ({
               modifiers={{
                 fullbooked: (date: Date) => {
                   const currentDate = moment().tz("Asia/Manila");
-                  if (moment(date).isBefore(currentDate)) return false;
+                  if (moment(date).isBefore(currentDate, "day")) return false;
                   const dateString = moment(date)
                     .tz("Asia/Manila")
                     .format("YYYY-MM-DD");
@@ -162,7 +162,7 @@ const DatePicker = ({
                 },
                 busy: (date: Date) => {
                   const currentDate = moment().tz("Asia/Manila");
-                  if (moment(date).isBefore(currentDate)) return false;
+                  if (moment(date).isBefore(currentDate, "day")) return false;
                   const dateString = moment(date)
                     .tz("Asia/Manila")
                     .format("YYYY-MM-DD");
@@ -185,11 +185,11 @@ const DatePicker = ({
                 const dateString = dateInPHT.format("YYYY-MM-DD");
                 const isFullbooked = fullBookedDates.has(dateString);
 
+                // Remove the currentDate.isSame check to allow today's date
                 return (
-                  dateInPHT.isBefore(currentDate) ||
+                  dateInPHT.isBefore(currentDate, "day") || // Only disable past dates
                   dateInPHT.isAfter(maxDate) ||
-                  isFullbooked ||
-                  currentDate.isSame(dateInPHT, "day")
+                  isFullbooked
                 );
               }}
               className={cn(
