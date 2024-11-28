@@ -358,8 +358,7 @@ export default function BlackWhiteYellowPatientCard() {
             </CardContent>
             {latestAppointment && (
               <CardFooter className="bg-gray-50 p-6 flex flex-col sm:flex-row justify-end items-center space-y-2 sm:space-y-0 gap-2">
-                {(latestAppointment.status.id === 1 ||
-                  latestAppointment.status.id === 2) && (
+                {latestAppointment.status.id === 1 && (
                   <EditAppointment
                     appointment={latestAppointment}
                     text={false}
