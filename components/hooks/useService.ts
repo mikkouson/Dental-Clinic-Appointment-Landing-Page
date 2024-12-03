@@ -33,9 +33,10 @@ export function useService(
     isLoading: serviceLoading,
     mutate,
   } = useSWR<{
+    [x: string]: any;
     data: Service[] | [];
     count: number;
-  }>(`/api/service?${queryString.toString()}`, fetcher);
+  }>(`/api/services?${queryString.toString()}`, fetcher);
 
   const supabase = createClient();
 
