@@ -1,16 +1,41 @@
+"use client";
 import { ReactNode } from "react";
 import { BentoGrid, BentoGridItem } from "./ui/bento-grid";
+import { useService } from "./hooks/useService";
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
+
+// Define the Service type
+interface Service {
+  id: number;
+  name: string | null;
+  description: string | null;
+  price: number | null;
+  service_url?: string;
+  deleteOn: string | null;
+  updated_at: string | null;
+}
+
 type SkeletonProps = {
   children: ReactNode;
 };
+
 export function BentoGridDemo() {
+  const { services, serviceError, serviceLoading } = useService();
+
+  if (serviceLoading) return <div>Loading...</div>;
+  if (serviceError) return <div>Error loading services</div>;
+
+  // Ensure services is treated as an array and take only first 7
+  const activeServices = Array.isArray(services) ? services.slice(0, 7) : [];
+
   return (
     <div className="max-w-7xl mx-auto">
       <div
         id="services"
         className="flex-col flex justify-between gap-4 mb-8 sm:flex-row"
       >
-        <h2 className="mt-10 scroll-m-20 pb-2 text-4xl font-semibold tracking-tight transition-colors first:mt-0 text-center ">
+        <h2 className="mt-10 scroll-m-20 pb-2 text-4xl font-semibold tracking-tight transition-colors first:mt-0 text-center">
           Our Services
         </h2>
         <p className="text-md text-muted-foreground w-1/2 hidden sm:block">
@@ -20,15 +45,50 @@ export function BentoGridDemo() {
         </p>
       </div>
 
-      <BentoGrid className="grid grid-cols-2  lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {items.map((item, i) => (
+      <BentoGrid className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {activeServices.map((service: Service) => (
           <BentoGridItem
-            key={i}
-            title={item.title}
-            description={item.description}
-            header={item.header}
+            key={service.id}
+            title={service.name || ""}
+            description={service.description || ""}
+            header={
+              <Skeleton>
+                {service.service_url ? (
+                  <img
+                    src={service.service_url}
+                    alt={service.name || ""}
+                    className="object-cover w-full h-full rounded-xl"
+                    onError={(e) => {
+                      e.currentTarget.src = "/api/placeholder/400/300";
+                    }}
+                  />
+                ) : (
+                  <img
+                    src="/api/placeholder/400/300"
+                    alt={service.name || ""}
+                    className="object-cover w-full h-full rounded-xl"
+                  />
+                )}
+              </Skeleton>
+            }
           />
         ))}
+
+        {/* View All Card */}
+        <Link href="/all-services" className="h-full">
+          <BentoGridItem
+            className="cursor-pointer hover:bg-accent transition-colors group h-full flex flex-col"
+            title="View All Services"
+            description="Explore our complete range of dental services"
+            header={
+              <Skeleton>
+                <div className="w-full h-full flex items-center justify-center">
+                  <ArrowRight className="w-12 h-12 text-muted-foreground group-hover:translate-x-2 transition-transform" />
+                </div>
+              </Skeleton>
+            }
+          />
+        </Link>
       </BentoGrid>
     </div>
   );
@@ -40,145 +100,4 @@ const Skeleton = ({ children }: SkeletonProps) => (
   </div>
 );
 
-const items = [
-  {
-    title: "Dental Consultation",
-    description:
-      "Receive personalized dental advice and care tailored to your oral health needs.",
-    header: (
-      <Skeleton>
-        <img
-          src="/images/services/consultation.jpg"
-          alt="Dental Consultation"
-          className="object-cover w-full h-full rounded-xl"
-        />
-      </Skeleton>
-    ),
-  },
-  {
-    title: "Dental Cleaning",
-    description:
-      "Keep your smile bright and your teeth healthy with professional dental cleaning.",
-    header: (
-      <Skeleton>
-        <img
-          src="/images/services/cleaning.jpg"
-          alt="Dental Cleaning"
-          className="object-cover w-full h-full rounded-xl"
-        />
-      </Skeleton>
-    ),
-  },
-  {
-    title: "Dental Fillings",
-    description:
-      "Restore damaged teeth and maintain a natural look with our high-quality fillings.",
-    header: (
-      <Skeleton>
-        <img
-          src="/images/services/filling.png"
-          alt="Dental Fillings"
-          className="object-cover w-full h-full rounded-xl"
-        />
-      </Skeleton>
-    ),
-  },
-  {
-    title: "Orthodontic Treatment/Braces",
-    description:
-      "Achieve a straighter smile with our advanced braces and orthodontic treatments.",
-    header: (
-      <Skeleton>
-        <img
-          src="/images/services/braces.jpg"
-          alt="Braces"
-          className="object-cover w-full h-full rounded-xl"
-        />
-      </Skeleton>
-    ),
-  },
-  {
-    title: "Wisdom Tooth Removal",
-    description:
-      "Experience safe and effective wisdom tooth extraction to prevent future dental issues.",
-    header: (
-      <Skeleton>
-        <img
-          src="/images/services/wisdom.png"
-          alt="Wisdom Tooth Removal"
-          className="object-cover w-full h-full rounded-xl"
-        />
-      </Skeleton>
-    ),
-  },
-  {
-    title: "Root Canal Treatment",
-    description:
-      "Save your natural teeth and alleviate pain with expert root canal treatments.",
-    header: (
-      <Skeleton>
-        <img
-          src="/images/services/root.jpg"
-          alt="Root Canal Treatment"
-          className="object-cover w-full h-full rounded-xl"
-        />
-      </Skeleton>
-    ),
-  },
-  {
-    title: "Tooth Extraction",
-    description:
-      "Remove problematic teeth with minimal discomfort and optimal care.",
-    header: (
-      <Skeleton>
-        <img
-          src="/images/services/extract.jpg"
-          alt="Tooth Extraction"
-          className="object-cover w-full h-full rounded-xl"
-        />
-      </Skeleton>
-    ),
-  },
-  {
-    title: "Laser Teeth Whitening",
-    description:
-      "Brighten your smile with our safe and effective laser teeth whitening treatments.",
-    header: (
-      <Skeleton>
-        <img
-          src="/images/services/laser.jpg"
-          alt="Laser Teeth Whitening"
-          className="object-cover w-full h-full rounded-xl"
-        />
-      </Skeleton>
-    ),
-  },
-  {
-    title: "Removable Partial Denture",
-    description:
-      "Regain your confidence with custom-fitted, removable partial dentures.",
-    header: (
-      <Skeleton>
-        <img
-          src="/images/services/denture.jpg"
-          alt="Removable Partial Denture"
-          className="object-cover w-full h-full rounded-xl"
-        />
-      </Skeleton>
-    ),
-  },
-  {
-    title: "Veneers, Crowns, and Bridges",
-    description:
-      "Enhance your smile and restore damaged teeth with veneers, crowns, and bridges.",
-    header: (
-      <Skeleton>
-        <img
-          src="/images/services/veneers.jpg"
-          alt="Veneers"
-          className="object-cover w-full h-full rounded-xl"
-        />
-      </Skeleton>
-    ),
-  },
-];
+export default BentoGridDemo;

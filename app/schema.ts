@@ -290,6 +290,7 @@ export type Database = {
       };
       services: {
         Row: {
+          service_url: any;
           deleteOn: string | null;
           description: string | null;
           id: number;
